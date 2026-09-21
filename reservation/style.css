@@ -289,6 +289,50 @@ textarea:focus {
   background: #f8fafc;
 }
 
+/* Time row */
+
+.time-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.time-row select {
+  width: 100px;
+}
+
+/* Confirmation */
+
+.confirm-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+}
+
+.confirm-item {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 20px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.confirm-label {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.confirm-item > span:last-child {
+  color: var(--ink);
+  word-break: break-word;
+}
+
+.button-area {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 28px;
+}
 
 /* Mobile */
 
@@ -332,6 +376,21 @@ textarea:focus {
   }
 
   .postcode-row .secondary {
+    width: 100%;
+  }
+
+  /* Confirmation */
+
+  .confirm-item {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .button-area {
+    flex-direction: column-reverse;
+  }
+
+  .button-area button {
     width: 100%;
   }
 }

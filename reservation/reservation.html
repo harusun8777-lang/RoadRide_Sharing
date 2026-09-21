@@ -111,16 +111,15 @@
             </div>
 
             <div class="field">
-              <label for="time">
+              <label for="time-hour">
                 希望乗車時刻 <span class="required">必須</span>
               </label>
-              <input
-                id="time"
-                name="time"
-                type="time"
-                value="10:00"
-                required
-              >
+
+              <div class="time-row">
+                <select id="time-hour" name="time-hour" required></select>
+                <span>:</span>
+                <select id="time-minute" name="time-minute" required></select>
+              </div>
             </div>
 
             <div class="field">
@@ -209,6 +208,24 @@
       }
     }
 
+    // 時間選択肢を生成
+    const hourSelect = document.querySelector("#time-hour");
+    const minuteSelect = document.querySelector("#time-minute");
+
+    for (let i = 0; i < 24; i++) {
+      const option = document.createElement("option");
+      option.value = String(i).padStart(2, "0");
+      option.textContent = String(i).padStart(2, "0");
+      hourSelect.appendChild(option);
+    }
+
+    for (let i = 0; i < 60; i += 15) {
+      const option = document.createElement("option");
+      option.value = String(i).padStart(2, "0");
+      option.textContent = String(i).padStart(2, "0");
+      minuteSelect.appendChild(option);
+    }
+
     document.querySelector("#pickup-search").addEventListener("click", () => {
       searchAddress("#pickup-postcode", "#pickup-address");
     });
@@ -218,11 +235,21 @@
     });
 
     form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      toast.textContent = "予約内容を確認する画面へ進みます。";
-      toast.classList.add("is-visible");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+    event.preventDefault();
+
+    const params = new URLSearchParams({
+      pickup: document.querySelector("#pickup-address").value,
+      destination: document.querySelector("#destination-address").value,
+      date: document.querySelector("#date").value,
+      hour: document.querySelector("#time-hour").value,
+      minute: document.querySelector("#time-minute").value,
+      passengers: document.querySelector("#passengers").value,
+      care: document.querySelector("#care").value,
+      notes: document.querySelector("#notes").value
     });
+
+    window.location.href = `reservation_confirm.html?${params.toString()}`;
+  });
 
     // デモ用に今日の日付を初期値として設定
     const dateInput = document.querySelector("#date");
