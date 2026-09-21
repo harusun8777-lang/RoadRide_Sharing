@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>予約内容の確認 | RoadRide Sharing</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">RR</div>
+      <div>
+        <strong>RoadRide Sharing</strong>
+        <span>地域AI乗り合い交通</span>
+      </div>
+    </div>
+  </header>
+
+
+  <main class="page">
+
+    <section class="intro">
+      <p class="eyebrow">CONFIRMATION</p>
+      <h1>予約内容の確認</h1>
+      <p>
+        以下の内容で予約します。内容をご確認ください。
+      </p>
+    </section>
+
+
+    <section class="panel">
+
+      <div class="section-title">
+        <h2>予約内容</h2>
+      </div>
+
+
+      <div class="confirm-list">
+
+        <div class="confirm-item">
+          <span class="confirm-label">乗車場所</span>
+          <span id="confirm-pickup">---</span>
+        </div>
+
+        <div class="confirm-item">
+          <span class="confirm-label">目的地</span>
+          <span id="confirm-destination">---</span>
+        </div>
+
+        <div class="confirm-item">
+          <span class="confirm-label">希望乗車日</span>
+          <span id="confirm-date">---</span>
+        </div>
+
+        <div class="confirm-item">
+          <span class="confirm-label">希望乗車時刻</span>
+          <span id="confirm-time">---</span>
+        </div>
+
+        <div class="confirm-item">
+          <span class="confirm-label">利用人数</span>
+          <span id="confirm-passengers">---</span>
+        </div>
+
+        <div class="confirm-item">
+          <span class="confirm-label">配慮事項</span>
+          <span id="confirm-care">---</span>
+        </div>
+
+        <div class="confirm-item">
+          <span class="confirm-label">備考</span>
+          <span id="confirm-notes">---</span>
+        </div>
+
+      </div>
+
+
+      <div class="button-area">
+
+        <button
+          type="button"
+          class="secondary"
+          onclick="history.back()"
+        >
+          入力内容を修正する
+        </button>
+
+        <button
+          type="button"
+          class="primary"
+          id="confirm-button"
+        >
+          予約を確定する
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <div id="toast" class="toast">
+    予約を受け付けました
+  </div>
+
+
+  <script>
+
+    const params = new URLSearchParams(window.location.search);
+
+    const pickup = params.get("pickup");
+    const destination = params.get("destination");
+    const date = params.get("date");
+    const hour = params.get("hour");
+    const minute = params.get("minute");
+    const passengers = params.get("passengers");
+    const care = params.get("care");
+    const notes = params.get("notes");
+
+
+    document.querySelector("#confirm-pickup").textContent =
+      pickup || "---";
+
+    document.querySelector("#confirm-destination").textContent =
+      destination || "---";
+
+    document.querySelector("#confirm-date").textContent =
+      date || "---";
+
+    document.querySelector("#confirm-time").textContent =
+      hour && minute
+        ? `${hour}:${minute}`
+        : "---";
+
+    document.querySelector("#confirm-passengers").textContent =
+      passengers
+        ? `${passengers}人`
+        : "---";
+
+    document.querySelector("#confirm-care").textContent =
+      care || "なし";
+
+    document.querySelector("#confirm-notes").textContent =
+      notes || "なし";
+
+
+    document.querySelector("#confirm-button").addEventListener(
+      "click",
+      () => {
+
+        const toast = document.querySelector("#toast");
+
+        toast.classList.add("show");
+
+        setTimeout(() => {
+          toast.classList.remove("show");
+        }, 2500);
+
+      }
+    );
+
+  </script>
+
+</body>
+</html>
