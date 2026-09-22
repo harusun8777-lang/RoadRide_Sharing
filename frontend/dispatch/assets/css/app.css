@@ -327,13 +327,13 @@ h2 {
 }
 
 .table-container {
-  overflow-x: auto;
+  overflow-x: visible;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 th,

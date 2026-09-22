@@ -212,8 +212,8 @@ h2 { font-size: 20px; }
 }
 .filters input:focus, .filters select:focus { outline: 3px solid #bfdbfe; border-color: var(--blue); }
 
-.table-container { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+.table-container { overflow-x: visible; }
+table { width: 100%; border-collapse: collapse; white-space: normal; }
 th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid var(--line); }
 th { color: var(--muted); background: #f8fafc; font-size: 12px; }
 tbody tr.reservation-row { cursor: pointer; transition: background 120ms ease; }
@@ -270,7 +270,7 @@ td { font-size: 14px; max-width: 200px; overflow: hidden; text-overflow: ellipsi
   .panel { padding: 18px; border-radius: 14px; }
   .filters { grid-template-columns: 1fr; }
   .table-container { margin: 0 -18px; }
-  table { min-width: 650px; }
+  table { min-width: 0; }
   .bottom-nav {
     position: fixed;
     right: 0;

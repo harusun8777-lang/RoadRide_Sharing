@@ -92,7 +92,6 @@ function renderTable() {
   resultCount.textContent = filteredReservations.length;
   tableBody.innerHTML = filteredReservations.map((reservation) => `
     <tr class="reservation-row" data-detail-url="reservation-detail.html?id=${encodeURIComponent(reservation.id)}" tabindex="0">
-      <td><a class="reservation-link" href="reservation-detail.html?id=${encodeURIComponent(reservation.id)}">${reservation.number}</a></td>
       <td>${formatDate(reservation.date)} ${reservation.time}</td>
       <td>${reservation.pickup}</td>
       <td>${reservation.destination}</td>
