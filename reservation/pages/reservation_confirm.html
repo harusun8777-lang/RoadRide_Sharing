@@ -6,23 +6,27 @@
 
   <title>予約内容の確認 | RoadRide Sharing</title>
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/reservation_confirm.css">
+  <script src="../assets/js/reservation_confirm.js" defer></script>
 </head>
 
 <body>
 
   <header class="topbar">
-    <div class="brand">
-      <div class="brand-mark">RR</div>
-      <div>
-        <strong>RoadRide Sharing</strong>
-        <span>地域AI乗り合い交通</span>
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">RR</div>
+        <div>
+          <strong>RoadRide Sharing</strong>
+          <small>地域AI乗り合い交通</small>
+        </div>
       </div>
     </div>
   </header>
 
 
-  <main class="page">
+  <main class="main confirm-page">
 
     <section class="intro">
       <p class="eyebrow">CONFIRMATION</p>
@@ -85,7 +89,7 @@
         <button
           type="button"
           class="secondary"
-          onclick="history.back()"
+          id="back-button"
         >
           入力内容を修正する
         </button>
@@ -103,69 +107,6 @@
     </section>
 
   </main>
-
-
-  <div id="toast" class="toast">
-    予約を受け付けました
-  </div>
-
-
-  <script>
-
-    const params = new URLSearchParams(window.location.search);
-
-    const pickup = params.get("pickup");
-    const destination = params.get("destination");
-    const date = params.get("date");
-    const hour = params.get("hour");
-    const minute = params.get("minute");
-    const passengers = params.get("passengers");
-    const care = params.get("care");
-    const notes = params.get("notes");
-
-
-    document.querySelector("#confirm-pickup").textContent =
-      pickup || "---";
-
-    document.querySelector("#confirm-destination").textContent =
-      destination || "---";
-
-    document.querySelector("#confirm-date").textContent =
-      date || "---";
-
-    document.querySelector("#confirm-time").textContent =
-      hour && minute
-        ? `${hour}:${minute}`
-        : "---";
-
-    document.querySelector("#confirm-passengers").textContent =
-      passengers
-        ? `${passengers}人`
-        : "---";
-
-    document.querySelector("#confirm-care").textContent =
-      care || "なし";
-
-    document.querySelector("#confirm-notes").textContent =
-      notes || "なし";
-
-
-    document.querySelector("#confirm-button").addEventListener(
-      "click",
-      () => {
-
-        const toast = document.querySelector("#toast");
-
-        toast.classList.add("show");
-
-        setTimeout(() => {
-          toast.classList.remove("show");
-        }, 2500);
-
-      }
-    );
-
-  </script>
 
 </body>
 </html>
