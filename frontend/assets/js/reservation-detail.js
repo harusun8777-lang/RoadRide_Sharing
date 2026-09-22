@@ -7,6 +7,7 @@ const reservations = {
     pickup: "電波学園前",
     destination: "市役所",
     passengers: 1,
+    notes: "なし",
     status: "matching"
   },
   "reservation-002": {
@@ -17,6 +18,7 @@ const reservations = {
     pickup: "中央公園入口",
     destination: "市役所",
     passengers: 2,
+    notes: "大きな荷物あり",
     status: "matching"
   },
   "reservation-003": {
@@ -27,6 +29,7 @@ const reservations = {
     pickup: "駅前ロータリー",
     destination: "中央病院",
     passengers: 1,
+    notes: "車いす対応希望",
     status: "confirmed"
   }
 };
@@ -40,6 +43,7 @@ const reservation = reservations[reservationId] || {
   pickup: "電波学園前",
   destination: "市役所",
   passengers: 1,
+  notes: "なし",
   status: "matching"
 };
 
@@ -96,6 +100,7 @@ function renderReservation() {
   document.querySelector("#reservation-time").textContent = reservation.time;
   document.querySelector("#reservation-passengers").textContent = `${reservation.passengers}名`;
   document.querySelector("#reservation-user").textContent = reservation.user;
+  document.querySelector("#reservation-notes").textContent = reservation.notes || "なし";
   document.querySelector("#pickup-location").textContent = reservation.pickup;
   document.querySelector("#destination-location").textContent = reservation.destination;
 }
@@ -122,6 +127,7 @@ document.querySelector("#cancel-button").addEventListener("click", () => {
 document.querySelector("#confirm-button").addEventListener("click", () => {
   if (reservation.status !== "matching") return;
   updateStatus("confirmed");
+  window.location.href = `ai-candidates.html?id=${encodeURIComponent(reservationId)}`;
 });
 
 renderReservation();

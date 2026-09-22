@@ -26,6 +26,9 @@ button { cursor: pointer; }
 .brand strong, .brand small { display: block; }
 .brand strong { font-size: 16px; }
 .brand small { color: var(--muted); font-size: 12px; }
+.header-actions { display: flex; align-items: center; gap: 18px; }
+.header-nav-link { color: var(--blue); font-size: 14px; font-weight: 700; }
+.header-nav-link:hover { color: var(--blue-dark); }
 .back-link { color: var(--blue); font-size: 14px; font-weight: 700; }
 
 .page-content { padding: 30px 0 100px; }
@@ -62,6 +65,8 @@ h2 { font-size: 20px; }
 .info-item dt { color: var(--muted); font-size: 13px; }
 .info-item dd { margin: 3px 0 0; font-size: 16px; font-weight: 700; }
 .info-item.highlight dd { color: var(--blue); font-size: 20px; }
+.consideration-item { grid-column: 1 / -1; }
+.consideration-item dd { color: var(--warning); }
 .route-time { color: var(--muted); font-size: 13px; font-weight: 700; }
 .route-line { position: relative; display: grid; gap: 4px; }
 .route-point { display: flex; align-items: center; gap: 14px; min-height: 64px; }
