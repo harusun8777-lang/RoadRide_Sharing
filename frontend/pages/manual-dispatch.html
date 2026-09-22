@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>手動配車 | RoadRide Sharing</title>
+  <link rel="stylesheet" href="../assets/css/manual-dispatch.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-inner">
+        <a class="brand" href="reservations.html" aria-label="予約一覧へ戻る">
+          <span class="brand-mark">RR</span>
+          <span><strong>RoadRide Sharing</strong><small>配車管理</small></span>
+        </a>
+        <a class="back-link" href="ai-candidates.html">← AI配車候補</a>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="breadcrumb"><a href="reservations.html">予約一覧</a><span>›</span><a href="ai-candidates.html">AI配車候補</a><span>›</span><strong>手動配車</strong></div>
+      <section class="page-heading">
+        <div>
+          <p class="eyebrow">MANUAL DISPATCH</p>
+          <h1>手動配車</h1>
+          <p class="page-description" id="page-description">AI候補が作成できないため、担当者が配車内容を設定します。</p>
+        </div>
+        <span class="status status-warning" id="reason-status">AI失敗</span>
+      </section>
+
+      <div class="manual-layout">
+        <section class="panel reservation-panel">
+          <div class="panel-heading"><div><p class="eyebrow">RESERVATIONS</p><h2>配車する予約</h2></div><span class="selection-count" id="selection-count">2件選択中</span></div>
+          <p class="panel-description">同じ車両で配車する予約を選択してください。配慮事項を確認してから確定します。</p>
+          <div class="reservation-list">
+            <label class="reservation-item is-selected"><input type="checkbox" checked data-reservation="1"><span class="checkmark"></span><span class="reservation-content"><strong>RR-20260921-0001 佐藤 由美</strong><small>電波学園前 → 市役所 / 1名</small><em>配慮なし</em></span></label>
+            <label class="reservation-item is-selected"><input type="checkbox" checked data-reservation="2"><span class="checkmark"></span><span class="reservation-content"><strong>RR-20260921-0002 鈴木 一郎</strong><small>中央公園入口 → 市役所 / 2名</small><em class="note-warning">大きな荷物あり</em></span></label>
+            <label class="reservation-item"><input type="checkbox" data-reservation="3"><span class="checkmark"></span><span class="reservation-content"><strong>RR-20260921-0003 高橋 美咲</strong><small>駅前ロータリー → 中央病院 / 1名</small><em class="note-danger">車いす対応希望</em></span></label>
+          </div>
+        </section>
+
+        <aside class="side-column">
+          <section class="panel dispatch-settings">
+            <div class="panel-heading"><div><p class="eyebrow">DISPATCH PLAN</p><h2>配車内容</h2></div></div>
+            <div class="form-grid">
+              <label><span>車両</span><select id="vehicle-select"><option>乗合タクシー 1号車</option><option>乗合タクシー 2号車</option></select></label>
+              <label><span>出発予定時刻</span><input id="departure-input" type="time" value="09:55"></label>
+              <label><span>乗車順</span><select id="order-select"><option>佐藤 由美 → 鈴木 一郎</option><option>鈴木 一郎 → 佐藤 由美</option></select></label>
+            </div>
+            <div class="capacity-row"><span>乗車人数</span><strong id="capacity-value">3名 / 4名</strong></div>
+            <div class="warning-box" id="warning-box"><strong>配慮事項を確認してください</strong><p>鈴木 一郎さんに大きな荷物があります。車両の積載スペースを確認してください。</p></div>
+            <button class="button button-primary" id="confirm-manual" type="button">手動配車を確定</button>
+            <a class="button button-secondary" href="ai-candidates.html">AI候補へ戻る</a>
+          </section>
+          <section class="panel route-panel"><p class="eyebrow">ROUTE PREVIEW</p><h2>運行ルート</h2><div class="route-line"><div><small>乗車 1</small><strong>電波学園前</strong></div><span>→</span><div><small>乗車 2</small><strong>中央公園入口</strong></div><span>→</span><div><small>降車</small><strong>市役所</strong></div></div></section>
+        </aside>
+      </div>
+    </main>
+
+    <nav class="bottom-nav" aria-label="メインメニュー">
+      <a class="bottom-nav-item" href="reservations.html"><span>▦</span><small>予約一覧</small></a>
+      <a class="bottom-nav-item is-active" href="ai-candidates.html"><span>◫</span><small>配車候補</small></a>
+      <a class="bottom-nav-item" href="#"><span>◷</span><small>運行状況</small></a>
+    </nav>
+  </div>
+  <script src="../assets/js/manual-dispatch.js"></script>
+</body>
+</html>
