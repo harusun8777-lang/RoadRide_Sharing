@@ -36,6 +36,8 @@ async function searchAddress(postcodeId, addressId) {
 
 const hourSelect = document.querySelector("#time-hour");
 const minuteSelect = document.querySelector("#time-minute");
+const dateInput = document.querySelector("#date");
+const dateError = document.querySelector("#date-error");
 
 for (let i = 0; i < 24; i++) {
   const option = document.createElement("option");
@@ -59,8 +61,47 @@ document.querySelector("#destination-search").addEventListener("click", () => {
   searchAddress("#destination-postcode", "#destination-address");
 });
 
+function formatDateValue(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function isPastOrToday(value) {
+  if (!value) {
+    return false;
+  }
+
+  const todayValue = formatDateValue(new Date());
+
+  return value <= todayValue;
+}
+
+function validateRideDate() {
+  if (!isPastOrToday(dateInput.value)) {
+    dateError.textContent = "";
+    dateInput.setCustomValidity("");
+    return true;
+  }
+
+  const message = "明日以降の日付を選択してください。";
+
+  dateError.textContent = message;
+  dateInput.setCustomValidity(message);
+  return false;
+}
+
+dateInput.addEventListener("change", validateRideDate);
+
 form.addEventListener("submit", (event) => {
   event.preventDefault();
+
+  if (!validateRideDate()) {
+    dateInput.reportValidity();
+    return;
+  }
 
   const params = new URLSearchParams({
     pickup: document.querySelector("#pickup-address").value,
@@ -76,9 +117,7 @@ form.addEventListener("submit", (event) => {
   window.location.href = `reservation_confirm.html?${params.toString()}`;
 });
 
-const dateInput = document.querySelector("#date");
 const today = new Date();
-const yyyy = today.getFullYear();
-const mm = String(today.getMonth() + 1).padStart(2, "0");
-const dd = String(today.getDate()).padStart(2, "0");
-dateInput.value = `${yyyy}-${mm}-${dd}`;
+const tomorrow = new Date(today);
+tomorrow.setDate(today.getDate() + 1);
+dateInput.value = formatDateValue(tomorrow);

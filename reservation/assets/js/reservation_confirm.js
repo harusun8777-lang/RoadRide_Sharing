@@ -9,9 +9,17 @@ const passengers = params.get("passengers");
 const care = params.get("care");
 const notes = params.get("notes");
 
+function formatDisplayDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value || "---";
+  }
+
+  return value.replaceAll("-", "/");
+}
+
 document.querySelector("#confirm-pickup").textContent = pickup || "---";
 document.querySelector("#confirm-destination").textContent = destination || "---";
-document.querySelector("#confirm-date").textContent = date || "---";
+document.querySelector("#confirm-date").textContent = formatDisplayDate(date);
 document.querySelector("#confirm-time").textContent =
   hour && minute ? `${hour}:${minute}` : "---";
 document.querySelector("#confirm-passengers").textContent =
@@ -46,7 +54,9 @@ function createReservationNumber() {
 
 document.querySelector("#confirm-button").addEventListener("click", () => {
   const reservationNumber = createReservationNumber();
+  const completeParams = new URLSearchParams(window.location.search);
 
-  window.location.href =
-    `reservation_complete.html?reservationNumber=${encodeURIComponent(reservationNumber)}`;
+  completeParams.set("reservationNumber", reservationNumber);
+
+  window.location.href = `reservation_complete.html?${completeParams.toString()}`;
 });
