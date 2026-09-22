@@ -96,7 +96,6 @@ function renderTable() {
       <td>${formatDate(reservation.date)} ${reservation.time}</td>
       <td>${reservation.pickup}</td>
       <td>${reservation.destination}</td>
-      <td>${reservation.passengers}名</td>
       <td>${renderStatus(reservation.status)}</td>
     </tr>
   `).join("");
