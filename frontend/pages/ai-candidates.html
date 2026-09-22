@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI配車候補 | RoadRide Sharing</title>
+  <link rel="stylesheet" href="../assets/css/ai-candidates.css">
+</head>
+
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-inner">
+        <a class="brand" href="reservations.html" aria-label="予約一覧へ戻る">
+          <span class="brand-mark">RR</span>
+          <span><strong>RoadRide Sharing</strong><small>配車管理</small></span>
+        </a>
+        <a class="back-link" href="reservations.html">← 予約一覧</a>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="breadcrumb"><a href="reservations.html">予約一覧</a><span>›</span><strong>AI配車候補</strong></div>
+      <section class="page-heading">
+        <div>
+          <p class="eyebrow">AI MATCHING REVIEW</p>
+          <h1>AI配車候補</h1>
+          <p class="page-description">AIが作成した乗合候補を確認し、問題がなければ配車を確定します。</p>
+        </div>
+        <span class="status status-info">確認待ち 2件</span>
+      </section>
+
+      <div class="review-layout">
+        <section class="candidate-column">
+          <article class="panel candidate-card is-selected" data-candidate="1">
+            <div class="candidate-heading">
+              <div><span class="candidate-label">候補 A</span>
+                <h2>市役所方面 10:00便</h2>
+              </div>
+              <span class="status status-success">おすすめ</span>
+            </div>
+            <div class="candidate-summary"><strong>2名</strong><span>乗合グループ</span><strong>約25分</strong><span>所要時間</span>
+            </div>
+            <div class="route-preview"><span class="route-dot pickup"></span>
+              <div><small>乗車順 1</small><strong>電波学園前</strong></div><span class="route-arrow">→</span>
+              <div><small>降車順 1</small><strong>市役所</strong></div>
+            </div>
+            <div class="member-list">
+              <div class="member-item"><span class="member-number">1</span>
+                <div><strong>佐藤 由美</strong><small>電波学園前 → 市役所</small></div><span class="note-tag">配慮なし</span>
+              </div>
+              <div class="member-item"><span class="member-number">2</span>
+                <div><strong>鈴木 一郎</strong><small>中央公園入口 → 市役所</small></div><span
+                  class="note-tag note-warning">大きな荷物</span>
+              </div>
+            </div>
+            <button class="select-button" type="button" data-select="1">この候補を確認</button>
+          </article>
+
+          <article class="panel candidate-card" data-candidate="2">
+            <div class="candidate-heading">
+              <div><span class="candidate-label">候補 B</span>
+                <h2>市役所方面 10:10便</h2>
+              </div>
+              <span class="status status-neutral">別候補</span>
+            </div>
+            <div class="candidate-summary"><strong>1名</strong><span>乗合グループ</span><strong>約20分</strong><span>所要時間</span>
+            </div>
+            <div class="route-preview"><span class="route-dot pickup"></span>
+              <div><small>乗車順 1</small><strong>中央公園入口</strong></div><span class="route-arrow">→</span>
+              <div><small>降車順 1</small><strong>市役所</strong></div>
+            </div>
+            <div class="member-list">
+              <div class="member-item"><span class="member-number">1</span>
+                <div><strong>鈴木 一郎</strong><small>中央公園入口 → 市役所</small></div><span
+                  class="note-tag note-warning">大きな荷物</span>
+              </div>
+            </div>
+            <button class="select-button" type="button" data-select="2">この候補を確認</button>
+          </article>
+        </section>
+
+        <aside class="side-column">
+          <section class="panel review-panel">
+            <div class="panel-title">
+              <div>
+                <p class="eyebrow">REVIEW</p>
+                <h2>候補の確認</h2>
+              </div><span class="status status-success" id="selected-label">候補 A</span>
+            </div>
+            <dl class="review-list">
+              <div>
+                <dt>出発予定</dt>
+                <dd id="departure-time">9:55</dd>
+              </div>
+              <div>
+                <dt>乗車人数</dt>
+                <dd id="passenger-count">2名 / 4名</dd>
+              </div>
+              <div>
+                <dt>料金目安</dt>
+                <dd>800円</dd>
+              </div>
+              <div>
+                <dt>車両</dt>
+                <dd>乗合タクシー 1号車</dd>
+              </div>
+            </dl>
+            <div class="warning-box" id="warning-box"><strong>確認が必要です</strong>
+              <p>鈴木 一郎さんに大きな荷物があります。車両の積載スペースを確認してください。</p>
+            </div>
+            <button class="button button-primary" id="confirm-candidate" type="button">この候補を確定</button>
+            <button class="button button-secondary" id="edit-candidate" type="button">乗車順を修正</button>
+          </section>
+          <section class="panel fallback-panel">
+            <p class="eyebrow">FALLBACK</p>
+            <h2>AIを使わずに配車する</h2>
+            <p>候補がない場合やAIの処理に失敗した場合は、手動で配車内容を作成できます。</p>
+            <button class="button button-fallback" id="ai-failed-button" type="button">手動配車へ</button>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <nav class="bottom-nav" aria-label="メインメニュー">
+      <a class="bottom-nav-item" href="reservations.html"><span>▦</span><small>予約一覧</small></a>
+      <a class="bottom-nav-item is-active" href="ai-candidates.html"><span>◫</span><small>配車候補</small></a>
+      <a class="bottom-nav-item" href="#"><span>◷</span><small>運行状況</small></a>
+    </nav>
+  </div>
+  <script src="../assets/js/ai-candidates.js"></script>
+</body>
+
+</html>
