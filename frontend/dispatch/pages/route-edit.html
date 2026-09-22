@@ -77,7 +77,15 @@
 
               <label>
                 <span>出発予定時刻</span>
-                <input id="departure-edit" type="time" value="09:55">
+                <div class="time-control">
+                  <input id="departure-edit" type="time" value="09:55">
+                  <div class="time-stepper" aria-label="出発時刻を10分または30分調整">
+                    <button type="button" data-time-step="-30">−30分</button>
+                    <button type="button" data-time-step="-10">−10分</button>
+                    <button type="button" data-time-step="10">＋10分</button>
+                    <button type="button" data-time-step="30">＋30分</button>
+                  </div>
+                </div>
               </label>
 
               <label>

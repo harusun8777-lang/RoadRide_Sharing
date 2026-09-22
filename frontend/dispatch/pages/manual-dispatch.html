@@ -67,7 +67,18 @@
                   <option>乗合タクシー 1号車</option>
                   <option>乗合タクシー 2号車</option>
                 </select></label>
-              <label><span>出発予定時刻</span><input id="departure-input" type="time" value="09:55"></label>
+              <label>
+                <span>出発予定時刻</span>
+                <div class="time-control">
+                  <input id="departure-input" type="time" value="09:55">
+                  <div class="time-stepper" aria-label="出発時刻を10分または30分調整">
+                    <button type="button" data-time-step="-30">−30分</button>
+                    <button type="button" data-time-step="-10">−10分</button>
+                    <button type="button" data-time-step="10">＋10分</button>
+                    <button type="button" data-time-step="30">＋30分</button>
+                  </div>
+                </div>
+              </label>
               <label><span>乗車順</span><select id="order-select">
                   <option>佐藤 由美 → 鈴木 一郎</option>
                   <option>鈴木 一郎 → 佐藤 由美</option>
@@ -78,7 +89,6 @@
               <p>鈴木 一郎さんに大きな荷物があります。車両の積載スペースを確認してください。</p>
             </div>
             <button class="button button-primary" id="confirm-manual" type="button">手動配車を確定</button>
-            <a class="button button-secondary" href="ai-candidates.html">AI候補へ戻る</a>
           </section>
           <section class="panel route-panel">
             <p class="eyebrow">ROUTE PREVIEW</p>

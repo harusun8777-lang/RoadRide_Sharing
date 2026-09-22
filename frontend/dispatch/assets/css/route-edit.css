@@ -354,6 +354,34 @@ h2 {
     min-height: 90px;
 }
 
+.time-control {
+    display: grid;
+    gap: 8px;
+}
+
+.time-stepper {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.time-stepper button {
+    min-height: 34px;
+    padding: 0 6px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--blue-dark);
+    background: #f8fafc;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.time-stepper button:hover,
+.time-stepper button:focus-visible {
+    border-color: #93c5fd;
+    background: #eff6ff;
+}
+
 .warning-box {
     margin: 18px 0;
     padding: 14px;

@@ -32,6 +32,17 @@ const departureSummary = document.querySelector("#summary-departure");
 const editStatus = document.querySelector("#edit-status");
 const groupCount = document.querySelector("#group-count");
 
+function addMinutesToTime(timeValue, deltaMinutes) {
+  if (!timeValue) return "09:55";
+
+  const [hours, minutes] = timeValue.split(":").map(Number);
+  const totalMinutes = ((hours * 60 + minutes + deltaMinutes) % 1440 + 1440) % 1440;
+  const nextHours = Math.floor(totalMinutes / 60);
+  const nextMinutes = totalMinutes % 60;
+
+  return `${String(nextHours).padStart(2, "0")}:${String(nextMinutes).padStart(2, "0")}`;
+}
+
 function findRiderById(id) {
   return riders.find((rider) => rider.id === id);
 }
@@ -112,6 +123,17 @@ function render() {
     });
   });
 }
+
+document.querySelectorAll("[data-time-step]").forEach((button) => {
+  button.addEventListener("click", () => {
+    departureInput.value = addMinutesToTime(departureInput.value, Number(button.dataset.timeStep));
+    state.departure = departureInput.value;
+    departureSummary.textContent = state.departure;
+    editStatus.textContent = "未反映";
+    editStatus.classList.remove("status-success");
+    editStatus.classList.add("status-info");
+  });
+});
 
 document.querySelector("#apply-edit").addEventListener("click", () => {
   const nextDeparture = departureInput.value || state.departure;

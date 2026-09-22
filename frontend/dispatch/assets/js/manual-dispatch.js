@@ -6,6 +6,25 @@ const capacityValue = document.querySelector("#capacity-value");
 const reservationItems = document.querySelectorAll(".reservation-item");
 const checkboxes = document.querySelectorAll("[data-reservation]");
 const confirmButton = document.querySelector("#confirm-manual");
+const departureInput = document.querySelector("#departure-input");
+
+function addMinutesToTime(timeValue, deltaMinutes) {
+  if (!timeValue) return "09:55";
+
+  const [hours, minutes] = timeValue.split(":").map(Number);
+  const totalMinutes = ((hours * 60 + minutes + deltaMinutes) % 1440 + 1440) % 1440;
+  const nextHours = Math.floor(totalMinutes / 60);
+  const nextMinutes = totalMinutes % 60;
+
+  return `${String(nextHours).padStart(2, "0")}:${String(nextMinutes).padStart(2, "0")}`;
+}
+
+document.querySelectorAll("[data-time-step]").forEach((button) => {
+  button.addEventListener("click", () => {
+    departureInput.value = addMinutesToTime(departureInput.value, Number(button.dataset.timeStep));
+    departureInput.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+});
 
 if (reason === "no-candidate") {
   reasonStatus.textContent = "候補なし";
