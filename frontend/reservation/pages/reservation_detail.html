@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>予約詳細 | RoadRide Sharing</title>
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/reservation_detail.css">
+  <script src="../assets/js/reservation_detail.js" defer></script>
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">RR</div>
+        <div>
+          <strong>RoadRide Sharing</strong>
+          <small>地域AI乗り合い交通</small>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main detail-page">
+    <section class="intro">
+      <p class="eyebrow">RESERVATION DETAIL</p>
+      <h1>予約詳細</h1>
+      <p>予約内容と現在の状態を確認できます。</p>
+    </section>
+
+    <section class="panel detail-panel">
+      <div class="detail-heading">
+        <div>
+          <span class="detail-label">予約番号</span>
+          <strong id="reservation-number">---</strong>
+        </div>
+        <span class="status info">マッチング中</span>
+      </div>
+
+      <div class="detail-list">
+        <div class="detail-item">
+          <span class="detail-label">乗車場所</span>
+          <span id="pickup">---</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">目的地</span>
+          <span id="destination">---</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">乗車日時</span>
+          <span id="ride-datetime">---</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">乗車人数</span>
+          <span id="passengers">---</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">配慮事項</span>
+          <span id="care">---</span>
+        </div>
+      </div>
+
+      <div class="button-area">
+        <a class="secondary link-button" href="reservation.html">
+          新しく予約する
+        </a>
+      </div>
+    </section>
+  </main>
+
+</body>
+</html>
