@@ -1,0 +1,8 @@
+name: Local
+variables:
+  - name: baseUrl
+    value: http://localhost:5087
+    enabled: true
+    secret: false
+    type: text
+    description: Local dotnet run (http profile)

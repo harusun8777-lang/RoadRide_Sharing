@@ -1,0 +1,21 @@
+info:
+  name: Register User
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/users"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "name": "山田太郎",
+        "role": "rider"
+      }
+
+settings:
+  encodeUrl: true
