@@ -1,8 +1,25 @@
+using Handler.Reservations;
+using Handler.Users;
+using Infrastructure.Reservations;
+using Infrastructure.Users;
+using Usecase.Reservation;
+using Usecase.User;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddSingleton<IReservationRepository, InMemoryReservationRepository>();
+builder.Services.AddScoped<RegisterReservationUseCase>();
+builder.Services.AddScoped<ListReservationsUseCase>();
+builder.Services.AddScoped<GetReservationUseCase>();
+builder.Services.AddScoped<CancelReservationUseCase>();
+
+builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+builder.Services.AddScoped<RegisterUserUseCase>();
+builder.Services.AddScoped<GetUserUseCase>();
 
 var app = builder.Build();
 
@@ -13,6 +30,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+var apiGroup = app.MapGroup("/api");
+apiGroup.MapReservationEndpoints();
+apiGroup.MapUserEndpoints();
 
 var summaries = new[]
 {

@@ -9,6 +9,17 @@ namespace Usecase.User
         Task AddAsync(DomainUser user);
     }
 
+    public class UserNotFoundException : Exception
+    {
+        public Guid UserId { get; }
+
+        public UserNotFoundException(Guid userId)
+            : base($"User {userId} was not found.")
+        {
+            UserId = userId;
+        }
+    }
+
     public class RegisterUserUseCase
     {
         private readonly IUserRepository _userRepository;
@@ -23,6 +34,22 @@ namespace Usecase.User
             var user = DomainUser.Create(name, role);
             await _userRepository.AddAsync(user);
             return user;
+        }
+    }
+
+    public class GetUserUseCase
+    {
+        private readonly IUserRepository _userRepository;
+
+        public GetUserUseCase(IUserRepository userRepository)
+        {
+            _userRepository = userRepository;
+        }
+
+        public async Task<DomainUser> ExecuteAsync(Guid id)
+        {
+            return await _userRepository.FindByIdAsync(id)
+                ?? throw new UserNotFoundException(id);
         }
     }
 }
