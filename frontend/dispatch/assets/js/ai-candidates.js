@@ -36,10 +36,8 @@ if (confirmButton) {
   confirmButton.addEventListener("click", () => {
     const details = candidateDetails[selectedCandidate];
     if (window.confirm(`${details.label}を確定しますか？`)) {
-      confirmButton.textContent = "確定しました";
-      confirmButton.disabled = true;
-      warningBox.classList.add("is-confirmed");
-      warningBox.querySelector("strong").textContent = "配車候補を確定しました";
+      const reservationId = new URLSearchParams(window.location.search).get("id") || "reservation-001";
+      window.location.href = `dispatch-detail.html?id=${encodeURIComponent(reservationId)}&source=ai`;
     }
   });
 }
