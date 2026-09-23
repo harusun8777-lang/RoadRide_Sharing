@@ -1,0 +1,6 @@
+bin/
+obj/
+bruno/
+*.md
+.vs/
+.vscode/
