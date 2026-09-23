@@ -1,0 +1,28 @@
+using DomainUser = Domain.Users.User;
+using UserRole = Domain.Users.UserRole;
+
+namespace Usecase.User
+{
+    public interface IUserRepository
+    {
+        Task<DomainUser?> FindByIdAsync(Guid id);
+        Task AddAsync(DomainUser user);
+    }
+
+    public class RegisterUserUseCase
+    {
+        private readonly IUserRepository _userRepository;
+
+        public RegisterUserUseCase(IUserRepository userRepository)
+        {
+            _userRepository = userRepository;
+        }
+
+        public async Task<DomainUser> ExecuteAsync(string name, UserRole role)
+        {
+            var user = DomainUser.Create(name, role);
+            await _userRepository.AddAsync(user);
+            return user;
+        }
+    }
+}
