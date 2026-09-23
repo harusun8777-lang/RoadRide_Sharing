@@ -1,5 +1,3 @@
-using Domain.Users;
-
 namespace Domain.Reservations
 {
     public enum ReservationStatus
