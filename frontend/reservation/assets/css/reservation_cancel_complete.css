@@ -1,0 +1,83 @@
+/* Reservation Cancel Complete Page */
+
+.cancel-complete-page .panel {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 720px;
+  margin: 0 auto 24px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.breadcrumb a {
+  color: var(--blue);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: var(--blue-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.complete-panel {
+  text-align: center;
+}
+
+.complete-panel h1 {
+  margin-bottom: 28px;
+}
+
+.reservation-number-box {
+  display: grid;
+  gap: 8px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #f8fafc;
+}
+
+.reservation-number-label {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+#reservation-number {
+  color: var(--blue);
+  font-size: 32px;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.button-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+@media (max-width: 767px) {
+  #reservation-number {
+    font-size: 26px;
+  }
+
+  .button-area .link-button {
+    width: 100%;
+  }
+}

@@ -27,53 +27,96 @@
 
   <main class="main detail-page">
     <section class="intro">
+      <nav class="breadcrumb" aria-label="現在位置">
+        <a id="history-link" href="reservation_history.html">予約履歴</a>
+        <span aria-hidden="true">→</span>
+        <span>予約詳細</span>
+      </nav>
       <p class="eyebrow">RESERVATION DETAIL</p>
       <h1>予約詳細</h1>
       <p>予約内容と現在の状態を確認できます。</p>
+      <span class="status info" id="status-badge">マッチング中</span>
     </section>
 
-    <section class="panel detail-panel">
-      <div class="detail-heading">
-        <div>
-          <span class="detail-label">予約番号</span>
-          <strong id="reservation-number">---</strong>
-        </div>
-        <span class="status info">マッチング中</span>
-      </div>
+    <div class="detail-layout">
+      <section class="content-column">
+        <article class="panel reservation-card">
+          <div class="card-heading">
+            <div>
+              <p class="detail-label">予約番号</p>
+              <h2 id="reservation-number">---</h2>
+            </div>
+          </div>
 
-      <div class="detail-list">
-        <div class="detail-item">
-          <span class="detail-label">乗車場所</span>
-          <span id="pickup">---</span>
-        </div>
+          <dl class="info-grid">
+            <div class="info-item highlight">
+              <dt>希望乗車日</dt>
+              <dd id="reservation-date">---</dd>
+            </div>
+            <div class="info-item highlight">
+              <dt>希望乗車時刻</dt>
+              <dd id="reservation-time">---</dd>
+            </div>
+            <div class="info-item">
+              <dt>乗車人数</dt>
+              <dd id="passengers">---</dd>
+            </div>
+            <div class="info-item consideration-item">
+              <dt>配慮事項</dt>
+              <dd id="care">---</dd>
+            </div>
+          </dl>
+        </article>
 
-        <div class="detail-item">
-          <span class="detail-label">目的地</span>
-          <span id="destination">---</span>
-        </div>
+        <article class="panel route-card">
+          <div class="card-heading">
+            <div>
+              <p class="eyebrow">TRIP ROUTE</p>
+              <h2>乗車ルート</h2>
+            </div>
+          </div>
 
-        <div class="detail-item">
-          <span class="detail-label">乗車日時</span>
-          <span id="ride-datetime">---</span>
-        </div>
+          <div class="route-line">
+            <div class="route-point pickup-point">
+              <span class="point-icon">●</span>
+              <div>
+                <span class="route-label">乗車場所</span>
+                <strong id="pickup">---</strong>
+              </div>
+            </div>
+            <div class="route-connector"><span></span></div>
+            <div class="route-point destination-point">
+              <span class="point-icon">◆</span>
+              <div>
+                <span class="route-label">目的地</span>
+                <strong id="destination">---</strong>
+              </div>
+            </div>
+          </div>
+        </article>
 
-        <div class="detail-item">
-          <span class="detail-label">乗車人数</span>
-          <span id="passengers">---</span>
-        </div>
+        <article class="panel history-card">
+          <div class="card-heading">
+            <div>
+              <p class="eyebrow">ACTIVITY</p>
+              <h2>予約の履歴</h2>
+            </div>
+          </div>
 
-        <div class="detail-item">
-          <span class="detail-label">配慮事項</span>
-          <span id="care">---</span>
-        </div>
-      </div>
+          <ol class="timeline" id="reservation-timeline"></ol>
+        </article>
+      </section>
 
-      <div class="button-area">
-        <a class="secondary link-button" href="reservation.html">
-          新しく予約する
-        </a>
-      </div>
-    </section>
+      <aside class="side-column">
+        <section class="panel action-card">
+          <h2>予約操作</h2>
+          <p>予約内容を確認し、必要に応じてキャンセルできます。</p>
+          <a class="cancel-link link-button" id="cancel-button" href="reservation_cancel.html">
+            予約をキャンセル
+          </a>
+        </section>
+      </aside>
+    </div>
   </main>
 
 </body>
