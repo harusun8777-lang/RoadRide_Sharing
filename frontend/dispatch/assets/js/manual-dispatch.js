@@ -54,8 +54,8 @@ confirmButton.addEventListener("click", () => {
     return;
   }
   if (window.confirm("この内容で手動配車を確定しますか？")) {
-    confirmButton.textContent = "手動配車を確定しました";
-    confirmButton.disabled = true;
+    const reservationId = new URLSearchParams(window.location.search).get("id") || "reservation-001";
+    window.location.href = `dispatch-detail.html?id=${encodeURIComponent(reservationId)}&source=manual`;
   }
 });
 
