@@ -1,5 +1,7 @@
 using DomainReservation = Domain.Reservations.Reservation;
 using ReservationStatus = Domain.Reservations.ReservationStatus;
+using IUserRepository = Usecase.User.IUserRepository;
+using UserNotFoundException = Usecase.User.UserNotFoundException;
 
 namespace Usecase.Reservation
 {
@@ -34,10 +36,14 @@ namespace Usecase.Reservation
     public class RegisterReservationUseCase
     {
         private readonly IReservationRepository _reservationRepository;
+        private readonly IUserRepository _userRepository;
 
-        public RegisterReservationUseCase(IReservationRepository reservationRepository)
+        public RegisterReservationUseCase(
+            IReservationRepository reservationRepository,
+            IUserRepository userRepository)
         {
             _reservationRepository = reservationRepository;
+            _userRepository = userRepository;
         }
 
         public async Task<DomainReservation> ExecuteAsync(
@@ -48,6 +54,9 @@ namespace Usecase.Reservation
             int passengerCount,
             string? considerationNotes)
         {
+            if (!await _userRepository.ExistsAsync(userId))
+                throw new UserNotFoundException(userId);
+
             var reservationNumber = GenerateReservationNumber();
             var reservation = DomainReservation.Create(
                 reservationNumber,

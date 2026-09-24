@@ -1,7 +1,9 @@
 using Handler.Reservations;
 using Handler.Users;
+using Infrastructure;
 using Infrastructure.Reservations;
 using Infrastructure.Users;
+using Microsoft.EntityFrameworkCore;
 using Usecase.Reservation;
 using Usecase.User;
 
@@ -11,17 +13,29 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddSingleton<IReservationRepository, InMemoryReservationRepository>();
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sql => sql.EnableRetryOnFailure()));
+
+builder.Services.AddScoped<IReservationRepository, EfReservationRepository>();
 builder.Services.AddScoped<RegisterReservationUseCase>();
 builder.Services.AddScoped<ListReservationsUseCase>();
 builder.Services.AddScoped<GetReservationUseCase>();
 builder.Services.AddScoped<CancelReservationUseCase>();
 
-builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+builder.Services.AddScoped<IUserRepository, EfUserRepository>();
 builder.Services.AddScoped<RegisterUserUseCase>();
 builder.Services.AddScoped<GetUserUseCase>();
 
 var app = builder.Build();
+
+// マイグレーション導入までは起動時にスキーマを作成する（DBが無ければ作成、あれば何もしない）
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

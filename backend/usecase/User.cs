@@ -6,6 +6,7 @@ namespace Usecase.User
     public interface IUserRepository
     {
         Task<DomainUser?> FindByIdAsync(Guid id);
+        Task<bool> ExistsAsync(Guid id);
         Task AddAsync(DomainUser user);
     }
 

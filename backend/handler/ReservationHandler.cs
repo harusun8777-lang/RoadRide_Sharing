@@ -1,7 +1,9 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
 using Usecase.Reservation;
 using DomainReservation = Domain.Reservations.Reservation;
 using DomainReservationStatus = Domain.Reservations.ReservationStatus;
+using UserNotFoundException = Usecase.User.UserNotFoundException;
 
 namespace Handler.Reservations
 {
@@ -75,6 +77,10 @@ namespace Handler.Reservations
                     $"/api/reservations/{reservation.Id}",
                     new { data = ToResponse(reservation) });
             }
+            catch (UserNotFoundException)
+            {
+                return ValidationError("user_id", "指定された利用者が見つかりません");
+            }
             catch (ArgumentException ex)
             {
                 return ValidationError(ex.ParamName ?? "request", ex.Message);
@@ -83,7 +89,7 @@ namespace Handler.Reservations
 
         private static async Task<IResult> ListAsync(
             ListReservationsUseCase useCase,
-            Guid? userId,
+            [FromQuery(Name = "user_id")] Guid? userId,
             DateOnly? date,
             string? status,
             DateTime? from,
