@@ -8,6 +8,7 @@
 
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="../assets/css/reservation_cancel.css">
+  <script src="../assets/js/reservation_api.js" defer></script>
   <script src="../assets/js/reservation_cancel.js" defer></script>
 </head>
 
@@ -73,6 +74,21 @@
       </div>
     </section>
   </main>
+
+  <nav class="bottom-nav" aria-label="主要画面">
+    <a class="bottom-nav-item" href="reservation.html">
+      <span aria-hidden="true">＋</span>
+      <small>新規予約</small>
+    </a>
+    <a class="bottom-nav-item is-active" href="reservation_history.html" aria-current="page">
+      <span aria-hidden="true">▦</span>
+      <small>予約履歴</small>
+    </a>
+    <span class="bottom-nav-item is-disabled" aria-disabled="true">
+      <span aria-hidden="true">◷</span>
+      <small>運行状況</small>
+    </span>
+  </nav>
 
 </body>
 </html>
