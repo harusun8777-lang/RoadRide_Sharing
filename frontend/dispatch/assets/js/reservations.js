@@ -53,10 +53,13 @@ const statusClasses = {
   cancelled: "status-danger"
 };
 
+const initialStatus = new URLSearchParams(window.location.search).get("status");
 const state = {
   query: "",
   date: "all",
-  status: "all"
+  status: ["matching", "confirmed", "in_progress", "completed", "cancelled"].includes(initialStatus)
+    ? initialStatus
+    : "all"
 };
 
 const tableBody = document.querySelector("#reservation-table-body");
@@ -118,14 +121,6 @@ function renderTable() {
   });
 }
 
-function renderSummary() {
-  const countByStatus = (status) => reservations.filter((reservation) => reservation.status === status).length;
-  document.querySelector("#total-count").textContent = reservations.length;
-  document.querySelector("#matching-count").textContent = countByStatus("matching");
-  document.querySelector("#confirmed-count").textContent = countByStatus("confirmed");
-  document.querySelector("#completed-count").textContent = countByStatus("completed");
-}
-
 function resetFilters() {
   state.query = "";
   state.date = "all";
@@ -135,6 +130,8 @@ function resetFilters() {
   document.querySelector("#status-filter").value = "all";
   renderTable();
 }
+
+document.querySelector("#status-filter").value = state.status;
 
 document.querySelector("#search-input").addEventListener("input", (event) => {
   state.query = event.target.value.trim();
@@ -152,9 +149,5 @@ document.querySelector("#status-filter").addEventListener("change", (event) => {
 });
 
 document.querySelector("#refresh-button").addEventListener("click", resetFilters);
-document.querySelector("#new-reservation-button").addEventListener("click", () => {
-  window.alert("予約追加画面は次の実装で追加します。");
-});
 
-renderSummary();
 renderTable();

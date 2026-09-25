@@ -59,6 +59,11 @@
   background: #fee2e2;
 }
 
+.confirmation-card {
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+}
+
 .detail-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(280px, .6fr);

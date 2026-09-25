@@ -51,6 +51,18 @@ const reservations = {
 
 const reservation = reservations[reservationId] || reservations["reservation-001"];
 
+try {
+  const dispatchPlan = JSON.parse(localStorage.getItem("roadrideDispatchPlan"));
+  if (dispatchPlan?.reservationId === reservationId) {
+    reservation.time = dispatchPlan.departure || reservation.time;
+    reservation.passengers = dispatchPlan.passengers || reservation.passengers;
+    reservation.vehicle = dispatchPlan.vehicle || reservation.vehicle;
+    reservation.riders = dispatchPlan.riderOrder || reservation.riders;
+    reservation.sourceLabel = dispatchPlan.source === "manual" ? "手動配車" : reservation.sourceLabel;
+  }
+} catch {
+}
+
 const statusText = {
   matching: "マッチング中",
   confirmed: "予約確定",
@@ -71,12 +83,14 @@ const statusBadge = document.querySelector("#status-badge");
 const noticeTitle = document.querySelector("#notice-title");
 const noticeMessage = document.querySelector("#notice-message");
 const confirmedDetails = document.querySelector("#confirmed-details");
-const startButton = document.querySelector("#start-button");
-const completeButton = document.querySelector("#complete-button");
+const primaryActionButton = document.querySelector("#primary-action-button");
 const cancelButton = document.querySelector("#cancel-button");
+const notificationKey = `roadrideNotification:${reservation.number}`;
+let notificationSent = localStorage.getItem(notificationKey) === "true";
 
 function updateStatus(status) {
   reservation.status = status;
+  saveReservationStatus(status);
   statusBadge.className = `status ${statusClass[status]}`;
   statusBadge.textContent = statusText[status];
 
@@ -94,14 +108,15 @@ function updateStatus(status) {
 
   confirmedDetails.hidden = false;
 
-  const canStart = ["matching", "confirmed"].includes(status);
-  startButton.hidden = !canStart;
-  startButton.textContent = status === "in_progress" ? "運行中" : "運行開始";
-  startButton.disabled = !canStart;
-
-  const canComplete = status === "in_progress";
-  completeButton.hidden = !canComplete;
-  completeButton.disabled = !canComplete;
+  const actionLabel = status === "confirmed" && !notificationSent
+    ? "利用者へ確定内容を通知"
+    : status === "confirmed"
+      ? "運行開始"
+      : status === "in_progress"
+        ? "乗車完了"
+        : "";
+  primaryActionButton.hidden = !actionLabel;
+  primaryActionButton.textContent = actionLabel;
 
   const isTerminal = ["completed", "cancelled"].includes(status);
   cancelButton.hidden = isTerminal;
@@ -131,6 +146,32 @@ function showMessage(message) {
   noticeMessage.textContent = "この画面はフロントエンド確認用です。バックエンドには接続していません。";
 }
 
+function saveReservationStatus(status) {
+  const historyKey = "roadrideReservationHistory";
+  let history;
+
+  try {
+    history = JSON.parse(localStorage.getItem(historyKey)) || [];
+  } catch {
+    history = [];
+  }
+
+  const updatedHistory = history.map((item) =>
+    item.reservationNumber === reservation.number
+      ? {
+          ...item,
+          status,
+          vehicle: reservation.vehicle,
+          fare: reservation.fare,
+          duration: reservation.routeDuration,
+          riderOrder: reservation.riders
+        }
+      : item
+  );
+
+  localStorage.setItem(historyKey, JSON.stringify(updatedHistory));
+}
+
 document.querySelector("#copy-button").addEventListener("click", async (event) => {
   try {
     await navigator.clipboard.writeText(reservation.number);
@@ -144,13 +185,19 @@ document.querySelector("#copy-button").addEventListener("click", async (event) =
   }, 1800);
 });
 
-startButton.addEventListener("click", () => {
-  if (["matching", "confirmed"].includes(reservation.status)) {
-    updateStatus("in_progress");
+primaryActionButton.addEventListener("click", () => {
+  if (reservation.status === "confirmed" && !notificationSent) {
+    notificationSent = true;
+    localStorage.setItem(notificationKey, "true");
+    updateStatus("confirmed");
+    return;
   }
-});
 
-completeButton.addEventListener("click", () => {
+  if (reservation.status === "confirmed") {
+    updateStatus("in_progress");
+    return;
+  }
+
   if (reservation.status === "in_progress") {
     const confirmed = window.confirm("運行を完了しますか？");
     if (!confirmed) return;
@@ -164,7 +211,6 @@ cancelButton.addEventListener("click", () => {
   const confirmCancel = window.confirm("この配車をキャンセルしますか？\nキャンセル後は一覧画面に戻ります。");
   if (confirmCancel) {
     updateStatus("cancelled");
-    window.location.href = "reservations.html";
   }
 });
 

@@ -55,6 +55,15 @@ confirmButton.addEventListener("click", () => {
   }
   if (window.confirm("この内容で手動配車を確定しますか？")) {
     const reservationId = new URLSearchParams(window.location.search).get("id") || "reservation-001";
+    localStorage.setItem("roadrideDispatchPlan", JSON.stringify({
+      reservationId,
+      departure: departureInput.value,
+      passengers: Array.from(document.querySelectorAll("[data-reservation]:checked"))
+        .reduce((total, checkbox) => total + (Number(checkbox.dataset.reservation) === 2 ? 2 : 1), 0),
+      vehicle: document.querySelector("#vehicle-select").value,
+      riderOrder: document.querySelector("#order-select").value,
+      source: "manual"
+    }));
     window.location.href = `dispatch-detail.html?id=${encodeURIComponent(reservationId)}&source=manual`;
   }
 });

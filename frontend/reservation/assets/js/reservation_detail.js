@@ -17,6 +17,7 @@ const statusClasses = {
   completed: "success",
   cancelled: "danger"
 };
+const confirmedStatuses = ["confirmed", "completed"];
 
 function getParam(name) {
   return params.get(name) || "";
@@ -50,12 +51,65 @@ function buildPageUrl(pageName) {
   return query ? `${pageName}?${query}` : pageName;
 }
 
+function updateHistoryStatus() {
+  const status = getParam("status");
+  const reservationNumber = getParam("reservationNumber");
+
+  if (!confirmedStatuses.includes(status) || !reservationNumber) {
+    return;
+  }
+
+  const historyKey = "roadrideReservationHistory";
+  let history;
+
+  try {
+    history = JSON.parse(localStorage.getItem(historyKey)) || [];
+  } catch {
+    history = [];
+  }
+
+  const updatedHistory = history.map((item) =>
+    item.reservationNumber === reservationNumber
+      ? {
+          ...item,
+          status,
+          vehicle: getParam("vehicle") || item.vehicle || "",
+          fare: getParam("fare") || item.fare || "",
+          duration: getParam("duration") || item.duration || "",
+          riderOrder: getParam("riderOrder") || item.riderOrder || ""
+        }
+      : item
+  );
+
+  localStorage.setItem(historyKey, JSON.stringify(updatedHistory));
+}
+
 function renderStatus() {
   const status = getParam("status") || "matching";
   const statusBadge = document.querySelector("#status-badge");
 
   statusBadge.className = `status ${statusClasses[status] || "info"}`;
   statusBadge.textContent = statusLabels[status] || statusLabels.matching;
+}
+
+function renderConfirmedDetails() {
+  const status = getParam("status");
+  const details = document.querySelector("#confirmed-details");
+
+  details.hidden = !confirmedStatuses.includes(status);
+  if (details.hidden) {
+    return;
+  }
+
+  document.querySelector("#confirmed-time").textContent = formatDatetime(
+    getParam("date"),
+    getParam("hour"),
+    getParam("minute")
+  );
+  document.querySelector("#confirmed-fare").textContent = getParam("fare") || "---";
+  document.querySelector("#confirmed-duration").textContent = getParam("duration") || "---";
+  document.querySelector("#confirmed-vehicle").textContent = getParam("vehicle") || "---";
+  document.querySelector("#confirmed-rider-order").textContent = getParam("riderOrder") || "---";
 }
 
 function renderTimeline() {
@@ -131,7 +185,9 @@ document.querySelector("#care").textContent =
   careLabels[getParam("care")] || "なし";
 
 renderStatus();
+renderConfirmedDetails();
 renderTimeline();
+updateHistoryStatus();
 
 document.querySelector("#history-link").href =
   buildPageUrl("reservation_history.html");

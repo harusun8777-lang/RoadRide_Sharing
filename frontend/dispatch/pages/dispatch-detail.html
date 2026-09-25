@@ -184,8 +184,7 @@
           <section class="panel action-card">
             <h2>配車操作</h2>
             <p>確定した配車内容を確認し、運行開始または完了を登録します。</p>
-            <button class="button button-primary" id="start-button" type="button">運行開始</button>
-            <button class="button button-secondary" id="complete-button" type="button" hidden>乗車完了</button>
+            <button class="button button-primary" id="primary-action-button" type="button">利用者へ確定内容を通知</button>
             <button class="button button-danger" id="cancel-button" type="button">キャンセル</button>
           </section>
 
@@ -201,9 +200,9 @@
     </main>
 
     <nav class="bottom-nav" aria-label="メインメニュー">
+      <a class="bottom-nav-item" href="dashboard.html"><span>⌂</span><small>ダッシュボード</small></a>
       <a class="bottom-nav-item" href="reservations.html"><span>▦</span><small>予約一覧</small></a>
-      <a class="bottom-nav-item is-active" href="ai-candidates.html"><span>◫</span><small>配車候補</small></a>
-      <a class="bottom-nav-item" href="#"><span>◷</span><small>運行状況</small></a>
+      <a class="bottom-nav-item" href="reservations.html?status=in_progress"><span>◷</span><small>運行状況</small></a>
     </nav>
   </div>
   <script src="../assets/js/dispatch-detail.js"></script>

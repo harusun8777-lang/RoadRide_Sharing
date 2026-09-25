@@ -17,6 +17,7 @@ const candidateMap = {
 };
 
 const candidateId = Number(new URLSearchParams(window.location.search).get("candidate")) || 1;
+const reservationId = new URLSearchParams(window.location.search).get("id") || "reservation-001";
 const currentCandidate = candidateMap[candidateId] || candidateMap[1];
 const riders = currentCandidate.members;
 
@@ -31,6 +32,8 @@ const departureInput = document.querySelector("#departure-edit");
 const departureSummary = document.querySelector("#summary-departure");
 const editStatus = document.querySelector("#edit-status");
 const groupCount = document.querySelector("#group-count");
+const vehicleInput = document.querySelector("#vehicle-edit");
+const changeReasonInput = document.querySelector("#change-reason");
 
 function addMinutesToTime(timeValue, deltaMinutes) {
   if (!timeValue) return "09:55";
@@ -86,6 +89,7 @@ function render() {
           <div class="order-actions">
             <button class="order-button" type="button" data-action="up" data-index="${index}" ${index === 0 ? "disabled" : ""}>上へ</button>
             <button class="order-button" type="button" data-action="down" data-index="${index}" ${index === state.order.length - 1 ? "disabled" : ""}>下へ</button>
+            <button class="order-button" type="button" data-action="remove" data-index="${index}">外す</button>
           </div>
         </div>
       `;
@@ -118,6 +122,15 @@ function render() {
 
   document.querySelectorAll("[data-action]").forEach((button) => {
     button.addEventListener("click", () => {
+      if (button.dataset.action === "remove") {
+        if (state.order.length === 1) {
+          window.alert("利用者が1名になるため、これ以上外せません。");
+          return;
+        }
+        state.order.splice(Number(button.dataset.index), 1);
+        render();
+        return;
+      }
       const direction = button.dataset.action === "up" ? -1 : 1;
       moveRider(Number(button.dataset.index), direction);
     });
@@ -138,11 +151,24 @@ document.querySelectorAll("[data-time-step]").forEach((button) => {
 document.querySelector("#apply-edit").addEventListener("click", () => {
   const nextDeparture = departureInput.value || state.departure;
   state.departure = nextDeparture;
+  localStorage.setItem("roadrideDispatchPlan", JSON.stringify({
+    reservationId,
+    departure: state.departure,
+    passengers: state.order.length,
+    vehicle: vehicleInput.value,
+    riderOrder: state.order
+      .map((riderId) => findRiderById(riderId)?.name)
+      .filter(Boolean)
+      .join(" → "),
+    changeReason: changeReasonInput.value.trim(),
+    source: "ai"
+  }));
   editStatus.textContent = "反映済み";
   editStatus.classList.remove("status-info");
   editStatus.classList.add("status-success");
   render();
   window.alert("ルートと乗車順を反映しました。");
+  window.location.href = `dispatch-detail.html?id=${encodeURIComponent(reservationId)}&source=ai`;
 });
 
 document.querySelector("#back-candidate").addEventListener("click", () => {

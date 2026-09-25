@@ -1,6 +1,6 @@
 const candidateDetails = {
-  1: { label: "候補 A", departure: "9:55", passengers: "2名 / 4名", warning: "鈴木 一郎さんに大きな荷物があります。車両の積載スペースを確認してください。" },
-  2: { label: "候補 B", departure: "10:05", passengers: "1名 / 4名", warning: "この候補には配慮事項の不一致はありません。" }
+  1: { label: "候補 A", departure: "9:55", passengerCount: 2, passengers: "2名 / 4名", warning: "鈴木 一郎さんに大きな荷物があります。車両の積載スペースを確認してください。" },
+  2: { label: "候補 B", departure: "10:05", passengerCount: 1, passengers: "1名 / 4名", warning: "この候補には配慮事項の不一致はありません。" }
 };
 
 const candidateCards = document.querySelectorAll(".candidate-card");
@@ -25,7 +25,8 @@ function selectCandidate(candidateId) {
 }
 
 function openRouteEdit() {
-  window.location.href = `route-edit.html?candidate=${selectedCandidate}`;
+  const reservationId = new URLSearchParams(window.location.search).get("id") || "reservation-001";
+  window.location.href = `route-edit.html?candidate=${selectedCandidate}&id=${encodeURIComponent(reservationId)}`;
 }
 
 document.querySelectorAll("[data-select]").forEach((button) => {
@@ -37,6 +38,12 @@ if (confirmButton) {
     const details = candidateDetails[selectedCandidate];
     if (window.confirm(`${details.label}を確定しますか？`)) {
       const reservationId = new URLSearchParams(window.location.search).get("id") || "reservation-001";
+      localStorage.setItem("roadrideDispatchPlan", JSON.stringify({
+        reservationId,
+        departure: details.departure,
+        passengers: details.passengerCount,
+        source: "ai"
+      }));
       window.location.href = `dispatch-detail.html?id=${encodeURIComponent(reservationId)}&source=ai`;
     }
   });

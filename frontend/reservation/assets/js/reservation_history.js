@@ -79,7 +79,12 @@ function buildDetailUrl(reservation) {
     "minute",
     "passengers",
     "care",
-    "notes"
+    "notes",
+    "status",
+    "vehicle",
+    "fare",
+    "duration",
+    "riderOrder"
   ].forEach((key) => {
     if (reservation[key]) {
       detailParams.set(key, reservation[key]);
@@ -87,8 +92,11 @@ function buildDetailUrl(reservation) {
   });
 
   const query = detailParams.toString();
+  const pageName = reservation.status === "cancelled"
+    ? "reservation_cancel_complete.html"
+    : "reservation_detail.html";
 
-  return query ? `reservation_detail.html?${query}` : "reservation_detail.html";
+  return query ? `${pageName}?${query}` : pageName;
 }
 
 function createCurrentReservation() {
