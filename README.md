@@ -17,7 +17,7 @@
 ```
 .
 ├── backend/
-│   ├── domain/          # ドメインモデル（User, Reservation と状態遷移ルール）
+│   ├── domain/          # ドメインモデル（User・Rider・Driver, Reservation, RideGroup と状態遷移ルール）
 │   ├── usecase/         # ユースケースとリポジトリのインターフェース
 │   ├── infrastructure/  # EF Core による永続化（AppDbContext, Ef*Repository）
 │   ├── handler/         # HTTPエンドポイント（リクエスト/レスポンスの変換）

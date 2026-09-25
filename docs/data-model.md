@@ -2,15 +2,18 @@
 
 ## 1. 方針
 
-MVPでは、予約を中心に乗合グループと配車情報を関連付ける。利用者や配車担当者の認証機能は後回しにし、利用者識別子・担当者識別子は外部認証や仮ユーザーを参照できる形式にする。
+MVPでは、予約を中心に乗合グループ（便）と運転手を関連付ける。配車担当者は置かず、AIが作成した便の候補から利用者が選んで確定する。認証機能は後回しにし、ユーザー識別子は外部認証や仮ユーザーを参照できる形式にする。
 
 ## 2. ER図
 
 ```mermaid
 erDiagram
-    USER ||--o{ RESERVATION : makes
+    USER ||--o| RIDER : "acts as"
+    USER ||--o| DRIVER : "acts as"
+    RIDER ||--o{ RESERVATION : makes
     RESERVATION ||--o{ GROUP_MEMBER : belongs_to
     RIDE_GROUP ||--o{ GROUP_MEMBER : contains
+    DRIVER ||--o{ RIDE_GROUP : drives
     RIDE_GROUP ||--o| VEHICLE : uses
     RIDE_GROUP ||--o{ ROUTE_STOP : has
     RESERVATION ||--o{ STATUS_HISTORY : records
@@ -27,8 +30,19 @@ erDiagram
         string kanaFirstName
         string kanaLastName
         string email
+        string active_role
         datetime created_at
         datatime updated_at
+    }
+
+    RIDER {
+        string user_id PK, FK
+        datetime created_at
+    }
+
+    DRIVER {
+        string user_id PK, FK
+        datetime created_at
     }
 
     RESERVATION {
@@ -50,12 +64,12 @@ erDiagram
     RIDE_GROUP {
         string id PK
         string group_number UK
+        string driver_id FK
         string vehicle_id FK
         datetime planned_departure_at
         string matching_reason
         decimal matching_score
         string status
-        string dispatcher_note
         datetime confirmed_at
         datetime created_at
         datetime updated_at
@@ -126,13 +140,33 @@ erDiagram
 
 ## 3. エンティティ定義
 
-### 3.1 users: 利用者・配車担当者
+### 3.1 users: ユーザー（マスタ）
+
+1人のユーザーは利用者（rider）と運転手（driver）の両方のプロフィールを持てるが、同時に稼働できるのは `active_role` の1つだけとする。`active_role` は、そのユーザーが持っているプロフィールにしか切り替えられない。
+
+また、利用者として未完了（`matching`、`confirmed`、`in_progress`）の予約がある間は運転手へ、運転手として未完了（`confirmed`、`in_progress`）の便がある間は利用者へ切り替えられない。
 
 | 項目 | 型 | 制約 | 説明 |
 | --- | --- | --- | --- |
 | `id` | string | PK | ユーザー識別子 |
-| `name` | string | 必須 | 表示名または予約名 |
-| `role` | string | 必須 | `rider` または `dispatcher` |
+| `email` | string | UNIQUE、必須 | メールアドレス |
+| `last_name` / `first_name` | string | 必須 | 氏名 |
+| `kana_last_name` / `kana_first_name` | string | 必須 | 読み仮名（全角カタカナ） |
+| `active_role` | string | 必須 | 現在稼働中の区分。`rider` または `driver` |
+| `created_at` | datetime | 必須 | 作成日時 |
+
+### 3.1.1 riders: 利用者プロフィール
+
+| 項目 | 型 | 制約 | 説明 |
+| --- | --- | --- | --- |
+| `user_id` | string | PK、FK | `users.id` |
+| `created_at` | datetime | 必須 | 作成日時 |
+
+### 3.1.2 drivers: 運転手プロフィール
+
+| 項目 | 型 | 制約 | 説明 |
+| --- | --- | --- | --- |
+| `user_id` | string | PK、FK | `users.id` |
 | `created_at` | datetime | 必須 | 作成日時 |
 
 ### 3.2 reservations: 予約
@@ -141,7 +175,7 @@ erDiagram
 | --- | --- | --- | --- |
 | `id` | string | PK | 予約内部ID |
 | `reservation_number` | string | UNIQUE、必須 | 利用者へ表示する予約番号 |
-| `user_id` | string | FK、必須 | `users.id` |
+| `user_id` | string | FK、必須 | `riders.user_id` |
 | `pickup_location` | string | 必須 | 乗車場所 |
 | `destination` | string | 必須 | 目的地 |
 | `requested_pickup_at` | datetime | 必須 | 希望乗車日時 |
@@ -159,13 +193,13 @@ erDiagram
 | --- | --- | --- | --- |
 | `id` | string | PK | グループ内部ID |
 | `group_number` | string | UNIQUE、必須 | グループ番号 |
+| `driver_id` | string | FK、必須 | `drivers.user_id`。この便を運転する運転手 |
 | `vehicle_id` | string | FK、任意 | 配車車両。確定前は未設定可 |
 | `planned_departure_at` | datetime | 任意 | 出発予定時刻 |
 | `matching_reason` | string | 任意 | AIまたはルールによる選定理由 |
 | `matching_score` | decimal | 任意 | 候補の評価スコア |
 | `status` | string | 必須 | `proposed`、`confirmed`、`in_progress`、`completed`、`cancelled` |
-| `dispatcher_note` | string | 任意 | 担当者メモ |
-| `confirmed_at` | datetime | 任意 | 配車確定日時 |
+| `confirmed_at` | datetime | 任意 | 最初の利用者が選んで確定した日時 |
 | `created_at` | datetime | 必須 | 作成日時 |
 | `updated_at` | datetime | 必須 | 更新日時 |
 
@@ -252,20 +286,20 @@ erDiagram
 ```mermaid
 stateDiagram-v2
     [*] --> matching: 予約登録
-    matching --> confirmed: 配車確定
-    confirmed --> in_progress: 運行開始
-    in_progress --> completed: 乗車完了
-    matching --> cancelled: キャンセル
-    confirmed --> cancelled: キャンセル
+    matching --> confirmed: 利用者が候補を選択
+    confirmed --> in_progress: 運転手が運行開始
+    in_progress --> completed: 運転手が乗車完了
+    matching --> cancelled: 利用者がキャンセル
+    confirmed --> cancelled: 利用者がキャンセル
 ```
 
 ### 乗合グループ状態
 
-- `proposed`: AIまたは手動で候補作成済み
-- `confirmed`: 配車担当者が確定済み
-- `in_progress`: 運行中
-- `completed`: 運行完了
-- `cancelled`: グループ配車を取り消し
+- `proposed`: AIが候補として作成済み。まだどの利用者にも選ばれていない
+- `confirmed`: 1人以上の利用者が選び、運行が確定済み
+- `in_progress`: 運転手が運行開始を記録済み
+- `completed`: 運転手が乗車完了を記録済み
+- `cancelled`: 取り消し済み（運転手の区分切り替えによる候補の取り消し、所属予約がすべてキャンセルされた便など）
 
 ## 5. MVPでのマッチング処理
 
@@ -274,9 +308,9 @@ stateDiagram-v2
 3. 乗車場所と目的地が近い予約を抽出する。
 4. 配慮事項と車両条件を確認する。
 5. 合計人数が車両定員以下になるようにグループ化する。
-6. `matching_reason` と `matching_score` を保存する。
-7. 候補を `proposed` として配車担当者に表示する。
-8. 担当者が確定した時点で、予約を `confirmed` に更新する。
+6. 運転手として稼働中で、時間帯が重なる確定済みの便がないユーザーを運転手に割り当てる。
+7. `matching_reason` と `matching_score` を保存し、便を `proposed` として利用者に候補表示する。
+8. 利用者が候補を選んだ時点で、予約を `confirmed` にして `group_members` に追加する。便が `proposed` なら `confirmed` にする。
 
 ## 6. API実装時の主な制約
 
@@ -286,4 +320,5 @@ stateDiagram-v2
 - `completed`、`cancelled` の予約は通常のマッチング対象にしない。
 - 乗合グループ確定時は、定員超過と配慮事項の不一致を再チェックする。
 - 状態変更と `status_history`、`operation_logs` の登録は同一処理で行う。
-- 利用者には本人の予約だけを返し、配車担当者には担当範囲の予約だけを返す。
+- 利用者には本人の予約だけを返し、運転手には自分が担当する便とその利用者情報だけを返す。
+- 便の確定時は、同じ便の最後の空席を複数の利用者が同時に選んでも定員を超えないようにする。
