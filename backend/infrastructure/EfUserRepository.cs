@@ -15,17 +15,23 @@ namespace Infrastructure.Users
 
         public Task<DomainUser?> FindByIdAsync(Guid id)
         {
-            return _db.Users.FirstOrDefaultAsync(u => u.Id == id);
-        }
-
-        public Task<bool> ExistsAsync(Guid id)
-        {
-            return _db.Users.AnyAsync(u => u.Id == id);
+            return _db.Users
+                .Include(u => u.Rider)
+                .Include(u => u.Driver)
+                .FirstOrDefaultAsync(u => u.Id == id);
         }
 
         public async Task AddAsync(DomainUser user)
         {
             _db.Users.Add(user);
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task UpdateAsync(DomainUser user)
+        {
+            if (_db.Entry(user).State == EntityState.Detached)
+                _db.Users.Update(user);
+
             await _db.SaveChangesAsync();
         }
     }

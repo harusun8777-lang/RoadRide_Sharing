@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using DomainReservation = Domain.Reservations.Reservation;
 using DomainReservationStatus = Domain.Reservations.ReservationStatus;
+using DomainDriver = Domain.Users.Driver;
+using DomainRider = Domain.Users.Rider;
 using DomainUser = Domain.Users.User;
 using DomainUserRole = Domain.Users.UserRole;
 
@@ -26,8 +28,8 @@ namespace Infrastructure
             v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v);
 
         private static readonly ValueConverter<DomainUserRole, string> UserRoleConverter = new(
-            v => v == DomainUserRole.Dispatcher ? "dispatcher" : "rider",
-            v => v == "dispatcher" ? DomainUserRole.Dispatcher : DomainUserRole.Rider);
+            v => v == DomainUserRole.Driver ? "driver" : "rider",
+            v => v == "driver" ? DomainUserRole.Driver : DomainUserRole.Rider);
 
         private static readonly ValueConverter<DomainReservationStatus, string> ReservationStatusConverter = new(
             v => ToStatusString(v),
@@ -48,8 +50,27 @@ namespace Infrastructure
                 user.Property(u => u.KanaFirstName).HasColumnName("kana_first_name").HasMaxLength(50).IsRequired();
                 user.Ignore(u => u.FullName);
                 user.Ignore(u => u.KanaFullName);
-                user.Property(u => u.Role).HasColumnName("role").HasMaxLength(20).HasConversion(UserRoleConverter).IsRequired();
+                user.Ignore(u => u.Roles);
+                user.Property(u => u.ActiveRole).HasColumnName("active_role").HasMaxLength(20).HasConversion(UserRoleConverter).IsRequired();
                 user.Property(u => u.CreatedAt).HasColumnName("created_at").HasConversion(UtcConverter);
+                user.HasOne(u => u.Rider).WithOne().HasForeignKey<DomainRider>(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
+                user.HasOne(u => u.Driver).WithOne().HasForeignKey<DomainDriver>(d => d.UserId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<DomainRider>(rider =>
+            {
+                rider.ToTable("riders");
+                rider.HasKey(r => r.UserId);
+                rider.Property(r => r.UserId).HasColumnName("user_id").ValueGeneratedNever();
+                rider.Property(r => r.CreatedAt).HasColumnName("created_at").HasConversion(UtcConverter);
+            });
+
+            modelBuilder.Entity<DomainDriver>(driver =>
+            {
+                driver.ToTable("drivers");
+                driver.HasKey(d => d.UserId);
+                driver.Property(d => d.UserId).HasColumnName("user_id").ValueGeneratedNever();
+                driver.Property(d => d.CreatedAt).HasColumnName("created_at").HasConversion(UtcConverter);
             });
 
             modelBuilder.Entity<DomainReservation>(reservation =>
@@ -60,7 +81,8 @@ namespace Infrastructure
                 reservation.Property(r => r.ReservationNumber).HasColumnName("reservation_number").HasMaxLength(32).IsRequired();
                 reservation.HasIndex(r => r.ReservationNumber).IsUnique();
                 reservation.Property(r => r.UserId).HasColumnName("user_id");
-                reservation.HasOne<DomainUser>().WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Restrict);
+                // 予約できるのは Rider プロフィールを持つ利用者のみ
+                reservation.HasOne<DomainRider>().WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Restrict);
                 reservation.Property(r => r.PickupLocation).HasColumnName("pickup_location").HasMaxLength(200).IsRequired();
                 reservation.Property(r => r.Destination).HasColumnName("destination").HasMaxLength(200).IsRequired();
                 reservation.Property(r => r.RequestedPickupAt).HasColumnName("requested_pickup_at").HasConversion(UtcConverter);

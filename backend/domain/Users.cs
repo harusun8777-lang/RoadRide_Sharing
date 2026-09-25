@@ -6,9 +6,10 @@ namespace Domain.Users
     public enum UserRole
     {
         Rider,
-        Dispatcher
+        Driver
     }
 
+    // 利用者のマスタ。Rider / Driver のプロフィールを両方持てるが、稼働できるのは ActiveRole の1つだけ
     public class User
     {
         // 読み仮名は全角カタカナ（長音符を含む）のみ許可する
@@ -20,11 +21,17 @@ namespace Domain.Users
         public string FirstName { get; }
         public string KanaLastName { get; }
         public string KanaFirstName { get; }
-        public UserRole Role { get; }
+        public UserRole ActiveRole { get; private set; }
         public DateTime CreatedAt { get; }
+
+        public Rider? Rider { get; private set; }
+        public Driver? Driver { get; private set; }
 
         public string FullName => $"{LastName} {FirstName}";
         public string KanaFullName => $"{KanaLastName} {KanaFirstName}";
+
+        public IEnumerable<UserRole> Roles =>
+            Enum.GetValues<UserRole>().Where(HasRole);
 
         // EF Core はコンストラクタ引数をプロパティ名で対応付けるため、引数名はプロパティ名に合わせる
         private User(
@@ -34,7 +41,7 @@ namespace Domain.Users
             string firstName,
             string kanaLastName,
             string kanaFirstName,
-            UserRole role,
+            UserRole activeRole,
             DateTime createdAt)
         {
             Id = id;
@@ -43,7 +50,7 @@ namespace Domain.Users
             FirstName = firstName;
             KanaLastName = kanaLastName;
             KanaFirstName = kanaFirstName;
-            Role = role;
+            ActiveRole = activeRole;
             CreatedAt = createdAt;
         }
 
@@ -53,19 +60,55 @@ namespace Domain.Users
             string firstName,
             string kanaLastName,
             string kanaFirstName,
-            UserRole role)
+            UserRole initialRole)
         {
             // 引数は左から順に評価されるため、検証順は引数順と同じになる
-            return new User(
+            var user = new User(
                 Guid.NewGuid(),
                 RequireText(email),
                 RequireText(lastName),
                 RequireText(firstName),
                 RequireKana(kanaLastName),
                 RequireKana(kanaFirstName),
-                role,
+                initialRole,
                 DateTime.UtcNow
             );
+            user.AddRole(initialRole);
+            return user;
+        }
+
+        public bool HasRole(UserRole role) => role switch
+        {
+            UserRole.Rider => Rider is not null,
+            UserRole.Driver => Driver is not null,
+            _ => false
+        };
+
+        public void AddRole(UserRole role)
+        {
+            if (HasRole(role))
+                throw new InvalidOperationException($"User already has the {role} role.");
+
+            switch (role)
+            {
+                case UserRole.Rider: Rider = Rider.Create(Id); break;
+                case UserRole.Driver: Driver = Driver.Create(Id); break;
+                default: throw new ArgumentOutOfRangeException(nameof(role));
+            }
+        }
+
+        public void SwitchRole(UserRole role)
+        {
+            if (!HasRole(role))
+                throw new InvalidOperationException($"User does not have the {role} role.");
+
+            ActiveRole = role;
+        }
+
+        public void EnsureActiveAs(UserRole role)
+        {
+            if (ActiveRole != role)
+                throw new InvalidOperationException($"User is not active as {role}.");
         }
 
         // 空文字・空白のみを拒否し、前後の空白を除いた値を返す

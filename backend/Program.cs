@@ -27,6 +27,8 @@ builder.Services.AddScoped<CancelReservationUseCase>();
 builder.Services.AddScoped<IUserRepository, EfUserRepository>();
 builder.Services.AddScoped<RegisterUserUseCase>();
 builder.Services.AddScoped<GetUserUseCase>();
+builder.Services.AddScoped<AddUserRoleUseCase>();
+builder.Services.AddScoped<SwitchUserRoleUseCase>();
 
 var app = builder.Build();
 

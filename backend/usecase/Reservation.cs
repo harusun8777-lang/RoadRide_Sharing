@@ -1,5 +1,6 @@
 using DomainReservation = Domain.Reservations.Reservation;
 using ReservationStatus = Domain.Reservations.ReservationStatus;
+using UserRole = Domain.Users.UserRole;
 using IUserRepository = Usecase.User.IUserRepository;
 using UserNotFoundException = Usecase.User.UserNotFoundException;
 
@@ -54,8 +55,9 @@ namespace Usecase.Reservation
             int passengerCount,
             string? considerationNotes)
         {
-            if (!await _userRepository.ExistsAsync(userId))
-                throw new UserNotFoundException(userId);
+            var user = await _userRepository.FindByIdAsync(userId)
+                ?? throw new UserNotFoundException(userId);
+            user.EnsureActiveAs(UserRole.Rider);
 
             var reservationNumber = GenerateReservationNumber();
             var reservation = DomainReservation.Create(

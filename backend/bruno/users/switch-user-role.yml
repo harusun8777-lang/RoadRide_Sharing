@@ -1,0 +1,24 @@
+info:
+  name: Switch User Role
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/users/:userId/active-role"
+  params:
+    - name: userId
+      value: cd0b97db-60dc-40c3-9523-86633cf4389f
+      type: path
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "role": "driver"
+      }
+
+settings:
+  encodeUrl: true

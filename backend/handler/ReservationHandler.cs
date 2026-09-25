@@ -42,6 +42,10 @@ namespace Handler.Reservations
             {
                 return ValidationError("user_id", "指定された利用者が見つかりません");
             }
+            catch (InvalidOperationException)
+            {
+                return ConflictError("利用者として稼働していないため予約できません");
+            }
             catch (ArgumentException ex)
             {
                 return ValidationError(ex.ParamName ?? "request", ex.Message);

@@ -6,8 +6,8 @@ namespace Usecase.User
     public interface IUserRepository
     {
         Task<DomainUser?> FindByIdAsync(Guid id);
-        Task<bool> ExistsAsync(Guid id);
         Task AddAsync(DomainUser user);
+        Task UpdateAsync(DomainUser user);
     }
 
     public class UserNotFoundException : Exception
@@ -57,6 +57,46 @@ namespace Usecase.User
         {
             return await _userRepository.FindByIdAsync(id)
                 ?? throw new UserNotFoundException(id);
+        }
+    }
+
+    public class AddUserRoleUseCase
+    {
+        private readonly IUserRepository _userRepository;
+
+        public AddUserRoleUseCase(IUserRepository userRepository)
+        {
+            _userRepository = userRepository;
+        }
+
+        public async Task<DomainUser> ExecuteAsync(Guid id, UserRole role)
+        {
+            var user = await _userRepository.FindByIdAsync(id)
+                ?? throw new UserNotFoundException(id);
+
+            user.AddRole(role);
+            await _userRepository.UpdateAsync(user);
+            return user;
+        }
+    }
+
+    public class SwitchUserRoleUseCase
+    {
+        private readonly IUserRepository _userRepository;
+
+        public SwitchUserRoleUseCase(IUserRepository userRepository)
+        {
+            _userRepository = userRepository;
+        }
+
+        public async Task<DomainUser> ExecuteAsync(Guid id, UserRole role)
+        {
+            var user = await _userRepository.FindByIdAsync(id)
+                ?? throw new UserNotFoundException(id);
+
+            user.SwitchRole(role);
+            await _userRepository.UpdateAsync(user);
+            return user;
         }
     }
 }

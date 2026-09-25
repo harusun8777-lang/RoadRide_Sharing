@@ -10,6 +10,8 @@ namespace Handler.Users
         {
             group.MapPost("/users", RegisterAsync).WithName("RegisterUser");
             group.MapGet("/users/{userId:guid}", GetAsync).WithName("GetUser");
+            group.MapPost("/users/{userId:guid}/roles", AddRoleAsync).WithName("AddUserRole");
+            group.MapPut("/users/{userId:guid}/active-role", SwitchRoleAsync).WithName("SwitchUserRole");
             return group;
         }
 
@@ -52,6 +54,52 @@ namespace Handler.Users
             }
         }
 
+        private static async Task<IResult> AddRoleAsync(
+            Guid userId,
+            UserRoleRequest request,
+            AddUserRoleUseCase useCase)
+        {
+            if (!TryParseRole(request.Role, out var role))
+                return ValidationError("role", "利用者区分の値が不正です");
+
+            try
+            {
+                var user = await useCase.ExecuteAsync(userId, role);
+                return Results.Ok(new DataResponse<UserResponse> { Data = ToResponse(user) });
+            }
+            catch (UserNotFoundException)
+            {
+                return NotFoundError("指定された利用者が見つかりません");
+            }
+            catch (InvalidOperationException)
+            {
+                return ConflictError("この利用者区分は登録済みです");
+            }
+        }
+
+        private static async Task<IResult> SwitchRoleAsync(
+            Guid userId,
+            UserRoleRequest request,
+            SwitchUserRoleUseCase useCase)
+        {
+            if (!TryParseRole(request.Role, out var role))
+                return ValidationError("role", "利用者区分の値が不正です");
+
+            try
+            {
+                var user = await useCase.ExecuteAsync(userId, role);
+                return Results.Ok(new DataResponse<UserResponse> { Data = ToResponse(user) });
+            }
+            catch (UserNotFoundException)
+            {
+                return NotFoundError("指定された利用者が見つかりません");
+            }
+            catch (InvalidOperationException)
+            {
+                return ConflictError("この利用者区分は登録されていません");
+            }
+        }
+
         private static UserResponse ToResponse(DomainUser user) => new()
         {
             Id = user.Id.ToString(),
@@ -60,14 +108,15 @@ namespace Handler.Users
             FirstName = user.FirstName,
             KanaLastName = user.KanaLastName,
             KanaFirstName = user.KanaFirstName,
-            Role = ToRoleString(user.Role),
+            ActiveRole = ToRoleString(user.ActiveRole),
+            Roles = user.Roles.Select(ToRoleString),
             CreatedAt = user.CreatedAt
         };
 
         private static string ToRoleString(DomainUserRole role) => role switch
         {
             DomainUserRole.Rider => "rider",
-            DomainUserRole.Dispatcher => "dispatcher",
+            DomainUserRole.Driver => "driver",
             _ => throw new ArgumentOutOfRangeException(nameof(role))
         };
 
@@ -76,7 +125,7 @@ namespace Handler.Users
             switch (value)
             {
                 case "rider": role = DomainUserRole.Rider; return true;
-                case "dispatcher": role = DomainUserRole.Dispatcher; return true;
+                case "driver": role = DomainUserRole.Driver; return true;
                 default: role = default; return false;
             }
         }
@@ -94,6 +143,11 @@ namespace Handler.Users
         private static IResult NotFoundError(string message) => Results.NotFound(new ErrorResponse
         {
             Error = new ErrorBody { Code = "NOT_FOUND", Message = message }
+        });
+
+        private static IResult ConflictError(string message) => Results.Conflict(new ErrorResponse
+        {
+            Error = new ErrorBody { Code = "CONFLICT", Message = message }
         });
     }
 }
