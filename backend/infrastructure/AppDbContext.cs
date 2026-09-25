@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using DomainReservation = Domain.Reservations.Reservation;
 using DomainReservationStatus = Domain.Reservations.ReservationStatus;
 using DomainDriver = Domain.Users.Driver;
+using DomainRideGroup = Domain.RideGroups.RideGroup;
+using DomainRideGroupStatus = Domain.RideGroups.RideGroupStatus;
 using DomainRider = Domain.Users.Rider;
 using DomainUser = Domain.Users.User;
 using DomainUserRole = Domain.Users.UserRole;
@@ -13,6 +15,7 @@ namespace Infrastructure
     {
         public DbSet<DomainUser> Users => Set<DomainUser>();
         public DbSet<DomainReservation> Reservations => Set<DomainReservation>();
+        public DbSet<DomainRideGroup> RideGroups => Set<DomainRideGroup>();
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -34,6 +37,10 @@ namespace Infrastructure
         private static readonly ValueConverter<DomainReservationStatus, string> ReservationStatusConverter = new(
             v => ToStatusString(v),
             v => ParseStatus(v));
+
+        private static readonly ValueConverter<DomainRideGroupStatus, string> RideGroupStatusConverter = new(
+            v => ToRideGroupStatusString(v),
+            v => ParseRideGroupStatus(v));
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -71,6 +78,20 @@ namespace Infrastructure
                 driver.HasKey(d => d.UserId);
                 driver.Property(d => d.UserId).HasColumnName("user_id").ValueGeneratedNever();
                 driver.Property(d => d.CreatedAt).HasColumnName("created_at").HasConversion(UtcConverter);
+            });
+
+            modelBuilder.Entity<DomainRideGroup>(group =>
+            {
+                group.ToTable("ride_groups");
+                group.HasKey(g => g.Id);
+                group.Property(g => g.Id).HasColumnName("id").ValueGeneratedNever();
+                group.Property(g => g.GroupNumber).HasColumnName("group_number").HasMaxLength(32).IsRequired();
+                group.HasIndex(g => g.GroupNumber).IsUnique();
+                group.Property(g => g.DriverId).HasColumnName("driver_id");
+                group.HasOne<DomainDriver>().WithMany().HasForeignKey(g => g.DriverId).OnDelete(DeleteBehavior.Restrict);
+                group.Property(g => g.Status).HasColumnName("status").HasMaxLength(20).HasConversion(RideGroupStatusConverter).IsRequired();
+                group.Property(g => g.CreatedAt).HasColumnName("created_at").HasConversion(UtcConverter);
+                group.Property(g => g.UpdatedAt).HasColumnName("updated_at").HasConversion(UtcConverter);
             });
 
             modelBuilder.Entity<DomainReservation>(reservation =>
@@ -115,6 +136,26 @@ namespace Infrastructure
             "in_progress" => DomainReservationStatus.InProgress,
             "completed" => DomainReservationStatus.Completed,
             "cancelled" => DomainReservationStatus.Cancelled,
+            _ => throw new ArgumentOutOfRangeException(nameof(value))
+        };
+
+        private static string ToRideGroupStatusString(DomainRideGroupStatus status) => status switch
+        {
+            DomainRideGroupStatus.Proposed => "proposed",
+            DomainRideGroupStatus.Confirmed => "confirmed",
+            DomainRideGroupStatus.InProgress => "in_progress",
+            DomainRideGroupStatus.Completed => "completed",
+            DomainRideGroupStatus.Cancelled => "cancelled",
+            _ => throw new ArgumentOutOfRangeException(nameof(status))
+        };
+
+        private static DomainRideGroupStatus ParseRideGroupStatus(string value) => value switch
+        {
+            "proposed" => DomainRideGroupStatus.Proposed,
+            "confirmed" => DomainRideGroupStatus.Confirmed,
+            "in_progress" => DomainRideGroupStatus.InProgress,
+            "completed" => DomainRideGroupStatus.Completed,
+            "cancelled" => DomainRideGroupStatus.Cancelled,
             _ => throw new ArgumentOutOfRangeException(nameof(value))
         };
     }

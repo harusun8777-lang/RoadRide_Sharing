@@ -2,9 +2,11 @@ using Handler.Reservations;
 using Handler.Users;
 using Infrastructure;
 using Infrastructure.Reservations;
+using Infrastructure.RideGroups;
 using Infrastructure.Users;
 using Microsoft.EntityFrameworkCore;
 using Usecase.Reservation;
+using Usecase.RideGroup;
 using Usecase.User;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +25,8 @@ builder.Services.AddScoped<RegisterReservationUseCase>();
 builder.Services.AddScoped<ListReservationsUseCase>();
 builder.Services.AddScoped<GetReservationUseCase>();
 builder.Services.AddScoped<CancelReservationUseCase>();
+
+builder.Services.AddScoped<IRideGroupRepository, EfRideGroupRepository>();
 
 builder.Services.AddScoped<IUserRepository, EfUserRepository>();
 builder.Services.AddScoped<RegisterUserUseCase>();

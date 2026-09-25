@@ -94,9 +94,11 @@ namespace Handler.Users
             {
                 return NotFoundError("指定された利用者が見つかりません");
             }
-            catch (UnfinishedReservationExistsException)
+            catch (UnfinishedActivityExistsException ex)
             {
-                return ConflictError("完了またはキャンセルされていない予約があるため切り替えできません");
+                return ConflictError(ex.ActiveRole == DomainUserRole.Driver
+                    ? "完了またはキャンセルされていない運行があるため切り替えできません"
+                    : "完了またはキャンセルされていない予約があるため切り替えできません");
             }
             catch (InvalidOperationException)
             {

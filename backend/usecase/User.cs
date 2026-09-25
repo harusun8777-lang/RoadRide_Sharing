@@ -1,6 +1,7 @@
 using DomainUser = Domain.Users.User;
 using UserRole = Domain.Users.UserRole;
 using IReservationRepository = Usecase.Reservation.IReservationRepository;
+using IRideGroupRepository = Usecase.RideGroup.IRideGroupRepository;
 
 namespace Usecase.User
 {
@@ -81,14 +82,17 @@ namespace Usecase.User
         }
     }
 
-    public class UnfinishedReservationExistsException : InvalidOperationException
+    // 未完了の予約（Rider）または運行（Driver）が残っているため、稼働区分を切り替えられない
+    public class UnfinishedActivityExistsException : InvalidOperationException
     {
         public Guid UserId { get; }
+        public UserRole ActiveRole { get; }
 
-        public UnfinishedReservationExistsException(Guid userId)
-            : base($"User {userId} has unfinished reservations.")
+        public UnfinishedActivityExistsException(Guid userId, UserRole activeRole)
+            : base($"User {userId} has unfinished activities as {activeRole}.")
         {
             UserId = userId;
+            ActiveRole = activeRole;
         }
     }
 
@@ -96,13 +100,16 @@ namespace Usecase.User
     {
         private readonly IUserRepository _userRepository;
         private readonly IReservationRepository _reservationRepository;
+        private readonly IRideGroupRepository _rideGroupRepository;
 
         public SwitchUserRoleUseCase(
             IUserRepository userRepository,
-            IReservationRepository reservationRepository)
+            IReservationRepository reservationRepository,
+            IRideGroupRepository rideGroupRepository)
         {
             _userRepository = userRepository;
             _reservationRepository = reservationRepository;
+            _rideGroupRepository = rideGroupRepository;
         }
 
         public async Task<DomainUser> ExecuteAsync(Guid id, UserRole role)
@@ -110,15 +117,20 @@ namespace Usecase.User
             var user = await _userRepository.FindByIdAsync(id)
                 ?? throw new UserNotFoundException(id);
 
-            // Rider から離れるときは、予約が完了かキャンセルになるまで切り替えさせない
-            if (user.ActiveRole == UserRole.Rider
-                && role != UserRole.Rider
-                && await _reservationRepository.HasUnfinishedAsync(id))
-                throw new UnfinishedReservationExistsException(id);
+            // 別の区分へ移るときは、今の区分での予約・運行が完了かキャンセルになるまで切り替えさせない
+            if (user.ActiveRole != role && await HasUnfinishedAsync(id, user.ActiveRole))
+                throw new UnfinishedActivityExistsException(id, user.ActiveRole);
 
             user.SwitchRole(role);
             await _userRepository.UpdateAsync(user);
             return user;
         }
+
+        private Task<bool> HasUnfinishedAsync(Guid id, UserRole activeRole) => activeRole switch
+        {
+            UserRole.Rider => _reservationRepository.HasUnfinishedAsync(id),
+            UserRole.Driver => _rideGroupRepository.HasUnfinishedByDriverAsync(id),
+            _ => throw new ArgumentOutOfRangeException(nameof(activeRole))
+        };
     }
 }
