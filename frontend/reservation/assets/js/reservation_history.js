@@ -1,5 +1,4 @@
 const params = new URLSearchParams(window.location.search);
-const historyKey = "roadrideReservationHistory";
 const statusLabels = {
   matching: "マッチング中",
   confirmed: "予約確定",
@@ -18,41 +17,12 @@ const state = {
   status: "all"
 };
 
-function getParam(name) {
-  return params.get(name) || "";
-}
-
-function readHistory() {
-  try {
-    return JSON.parse(localStorage.getItem(historyKey)) || [];
-  } catch {
-    return [];
-  }
-}
-
-function saveHistory(history) {
-  localStorage.setItem(historyKey, JSON.stringify(history));
-}
-
 function formatDisplayDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return value || "---";
   }
 
   return value.replaceAll("-", "/");
-}
-
-function formatDatetime(reservation) {
-  if (!reservation.date) {
-    return "---";
-  }
-
-  const time =
-    reservation.hour && reservation.minute
-      ? ` ${reservation.hour}:${reservation.minute}`
-      : "";
-
-  return `${formatDisplayDate(reservation.date)}${time}`;
 }
 
 function formatScheduleDatetime(reservation) {
@@ -68,29 +38,34 @@ function formatScheduleDatetime(reservation) {
 }
 
 function buildDetailUrl(reservation) {
-  const detailParams = new URLSearchParams();
+const detailParams = (typeof RoadRideReservationApi !== 'undefined' && RoadRideReservationApi.toParams)
+  ? RoadRideReservationApi.toParams(reservation)
+  : (() => {
+      const detailParams = new URLSearchParams();
 
-  [
-    "reservationNumber",
-    "pickup",
-    "destination",
-    "date",
-    "hour",
-    "minute",
-    "passengers",
-    "care",
-    "notes",
-    "status",
-    "vehicle",
-    "fare",
-    "duration",
-    "riderOrder"
-  ].forEach((key) => {
-    if (reservation[key]) {
-      detailParams.set(key, reservation[key]);
-    }
-  });
+      [
+        "reservationNumber",
+        "pickup",
+        "destination",
+        "date",
+        "hour",
+        "minute",
+        "passengers",
+        "care",
+        "notes",
+        "status",
+        "vehicle",
+        "fare",
+        "duration",
+        "riderOrder"
+      ].forEach((key) => {
+        if (reservation[key]) {
+          detailParams.set(key, reservation[key]);
+        }
+      });
 
+      return detailParams;
+    })();
   const query = detailParams.toString();
   const pageName = reservation.status === "cancelled"
     ? "reservation_cancel_complete.html"
@@ -100,24 +75,15 @@ function buildDetailUrl(reservation) {
 }
 
 function createCurrentReservation() {
-  const reservationNumber = getParam("reservationNumber");
-  const status = getParam("status");
+  const reservation = RoadRideReservationApi.fromParams(params);
 
-  if (!reservationNumber) {
+  if (!reservation.reservationNumber && !reservation.reservationId) {
     return null;
   }
 
   return {
-    reservationNumber,
-    pickup: getParam("pickup"),
-    destination: getParam("destination"),
-    date: getParam("date"),
-    hour: getParam("hour"),
-    minute: getParam("minute"),
-    passengers: getParam("passengers"),
-    care: getParam("care"),
-    notes: getParam("notes"),
-    status: statusLabels[status] ? status : "matching",
+    ...reservation,
+    status: statusLabels[reservation.status] ? reservation.status : "matching",
     savedAt: new Date().toISOString()
   };
 }
@@ -129,12 +95,19 @@ function mergeCurrentReservation(history) {
     return history;
   }
 
-  const filteredHistory = history.filter(
-    (item) => item.reservationNumber !== currentReservation.reservationNumber
-  );
+  const filteredHistory = history.filter((item) => {
+    if (
+      currentReservation.reservationId &&
+      item.reservationId === currentReservation.reservationId
+    ) {
+      return false;
+    }
+
+    return item.reservationNumber !== currentReservation.reservationNumber;
+  });
   const nextHistory = [currentReservation, ...filteredHistory];
 
-  saveHistory(nextHistory);
+  RoadRideReservationApi.writeHistory(nextHistory);
 
   return nextHistory;
 }
@@ -226,26 +199,32 @@ function resetFilters(history) {
   renderTable(history);
 }
 
-const history = mergeCurrentReservation(readHistory());
+async function initializeHistoryPage() {
+  const history = mergeCurrentReservation(
+    await RoadRideReservationApi.listReservations()
+  );
 
-renderSummary(history);
-renderTable(history);
-
-document.querySelector("#search-input").addEventListener("input", (event) => {
-  state.query = event.target.value.trim();
+  renderSummary(history);
   renderTable(history);
-});
 
-document.querySelector("#date-filter").addEventListener("change", (event) => {
-  state.date = event.target.value || "all";
-  renderTable(history);
-});
+  document.querySelector("#search-input").addEventListener("input", (event) => {
+    state.query = event.target.value.trim();
+    renderTable(history);
+  });
 
-document.querySelector("#status-filter").addEventListener("change", (event) => {
-  state.status = event.target.value;
-  renderTable(history);
-});
+  document.querySelector("#date-filter").addEventListener("change", (event) => {
+    state.date = event.target.value || "all";
+    renderTable(history);
+  });
 
-document.querySelector("#refresh-button").addEventListener("click", () => {
-  resetFilters(history);
-});
+  document.querySelector("#status-filter").addEventListener("change", (event) => {
+    state.status = event.target.value;
+    renderTable(history);
+  });
+
+  document.querySelector("#refresh-button").addEventListener("click", () => {
+    resetFilters(history);
+  });
+}
+
+initializeHistoryPage();

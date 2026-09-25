@@ -19,10 +19,6 @@ const statusClasses = {
 };
 const confirmedStatuses = ["confirmed", "completed"];
 
-function getParam(name) {
-  return params.get(name) || "";
-}
-
 function formatDisplayDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return value || "---";
@@ -45,47 +41,15 @@ function formatDisplayTime(hour, minute) {
   return hour && minute ? `${hour}:${minute}` : "---";
 }
 
-function buildPageUrl(pageName) {
-  const query = params.toString();
+function buildPageUrl(pageName, reservation) {
+  const nextParams = RoadRideReservationApi.toParams(reservation);
+  const query = nextParams.toString();
 
   return query ? `${pageName}?${query}` : pageName;
 }
 
-function updateHistoryStatus() {
-  const status = getParam("status");
-  const reservationNumber = getParam("reservationNumber");
-
-  if (!confirmedStatuses.includes(status) || !reservationNumber) {
-    return;
-  }
-
-  const historyKey = "roadrideReservationHistory";
-  let history;
-
-  try {
-    history = JSON.parse(localStorage.getItem(historyKey)) || [];
-  } catch {
-    history = [];
-  }
-
-  const updatedHistory = history.map((item) =>
-    item.reservationNumber === reservationNumber
-      ? {
-          ...item,
-          status,
-          vehicle: getParam("vehicle") || item.vehicle || "",
-          fare: getParam("fare") || item.fare || "",
-          duration: getParam("duration") || item.duration || "",
-          riderOrder: getParam("riderOrder") || item.riderOrder || ""
-        }
-      : item
-  );
-
-  localStorage.setItem(historyKey, JSON.stringify(updatedHistory));
-}
-
-function renderStatus() {
-  const status = getParam("status") || "matching";
+function renderStatus(reservation) {
+  const status = (reservation && reservation.status) || getParam("status") || "matching";
   const statusBadge = document.querySelector("#status-badge");
 
   statusBadge.className = `status ${statusClasses[status] || "info"}`;
@@ -112,18 +76,18 @@ function renderConfirmedDetails() {
   document.querySelector("#confirmed-rider-order").textContent = getParam("riderOrder") || "---";
 }
 
-function renderTimeline() {
-  const status = getParam("status") || "matching";
+function renderTimeline(reservation) {
+  const status = (reservation && reservation.status) || getParam("status") || "matching";
   const timeline = document.querySelector("#reservation-timeline");
   const rideDatetime = formatDatetime(
-    getParam("date"),
-    getParam("hour"),
-    getParam("minute")
+    reservation.date,
+    reservation.hour,
+    reservation.minute
   );
   const items = [
     {
       title: "予約を受け付けました",
-      time: getParam("reservationNumber") || "予約番号の発行済み",
+      time: reservation.reservationNumber || "予約番号の発行済み",
       current: false
     },
     {
@@ -170,26 +134,43 @@ function renderTimeline() {
   `).join("");
 }
 
-document.querySelector("#reservation-number").textContent =
-  getParam("reservationNumber") || "---";
-document.querySelector("#pickup").textContent = getParam("pickup") || "---";
-document.querySelector("#destination").textContent =
-  getParam("destination") || "---";
-document.querySelector("#reservation-date").textContent =
-  formatDisplayDate(getParam("date"));
-document.querySelector("#reservation-time").textContent =
-  formatDisplayTime(getParam("hour"), getParam("minute"));
-document.querySelector("#passengers").textContent =
-  getParam("passengers") ? `${getParam("passengers")}人` : "---";
-document.querySelector("#care").textContent =
-  careLabels[getParam("care")] || "なし";
+function renderReservation(reservation) {
+  document.querySelector("#reservation-number").textContent =
+    reservation.reservationNumber || "---";
+  document.querySelector("#pickup").textContent = reservation.pickup || "---";
+  document.querySelector("#destination").textContent =
+    reservation.destination || "---";
+  document.querySelector("#reservation-date").textContent =
+    formatDisplayDate(reservation.date);
+  document.querySelector("#reservation-time").textContent =
+    formatDisplayTime(reservation.hour, reservation.minute);
+  document.querySelector("#passengers").textContent =
+    reservation.passengers ? `${reservation.passengers}人` : "---";
+  document.querySelector("#care").textContent =
+    careLabels[reservation.care] || reservation.notes || "なし";
 
-renderStatus();
+renderStatus(reservation);
 renderConfirmedDetails();
-renderTimeline();
+renderTimeline(reservation);
 updateHistoryStatus();
 
-document.querySelector("#history-link").href =
-  buildPageUrl("reservation_history.html");
-document.querySelector("#cancel-button").href =
-  buildPageUrl("reservation_cancel.html");
+  document.querySelector("#history-link").href =
+    buildPageUrl("reservation_history.html", reservation);
+  document.querySelector("#cancel-button").href =
+    buildPageUrl("reservation_cancel.html", reservation);
+}
+
+async function initializeDetailPage() {
+  const fallbackReservation = RoadRideReservationApi.fromParams(params);
+
+  renderReservation(fallbackReservation);
+
+  const reservation = await RoadRideReservationApi.getReservation(
+    fallbackReservation.reservationId,
+    fallbackReservation
+  );
+
+  renderReservation(reservation);
+}
+
+initializeDetailPage();
