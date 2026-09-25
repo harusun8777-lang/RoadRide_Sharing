@@ -26,7 +26,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=RoadRideSharing;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
     ports:
-      - "5087:8080"
+      - "8080:8080"
     depends_on:
       sqlserver:
         condition: service_healthy

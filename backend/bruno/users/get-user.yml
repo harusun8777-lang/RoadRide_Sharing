@@ -8,8 +8,12 @@ http:
   url: "{{baseUrl}}/api/users/:userId"
   params:
     - name: userId
-      value: ""
+      value: cd0b97db-60dc-40c3-9523-86633cf4389f
       type: path
 
 settings:
   encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
