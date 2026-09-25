@@ -17,6 +17,8 @@ namespace Domain.Users
 
         public Guid Id { get; }
         public string Email { get; }
+        // 平文のパスワードは持たず、ハッシュ化済みの値だけを保持する
+        public string PasswordHash { get; }
         public string LastName { get; }
         public string FirstName { get; }
         public string KanaLastName { get; }
@@ -37,6 +39,7 @@ namespace Domain.Users
         private User(
             Guid id,
             string email,
+            string passwordHash,
             string lastName,
             string firstName,
             string kanaLastName,
@@ -46,6 +49,7 @@ namespace Domain.Users
         {
             Id = id;
             Email = email;
+            PasswordHash = passwordHash;
             LastName = lastName;
             FirstName = firstName;
             KanaLastName = kanaLastName;
@@ -56,6 +60,7 @@ namespace Domain.Users
 
         public static User Create(
             string email,
+            string passwordHash,
             string lastName,
             string firstName,
             string kanaLastName,
@@ -66,6 +71,7 @@ namespace Domain.Users
             var user = new User(
                 Guid.NewGuid(),
                 RequireText(email),
+                RequireText(passwordHash),
                 RequireText(lastName),
                 RequireText(firstName),
                 RequireKana(kanaLastName),

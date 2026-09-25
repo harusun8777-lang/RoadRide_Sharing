@@ -1,6 +1,7 @@
 using Handler.Reservations;
 using Handler.Users;
 using Infrastructure;
+using Infrastructure.Auth;
 using Infrastructure.Reservations;
 using Infrastructure.RideGroups;
 using Infrastructure.Users;
@@ -27,6 +28,8 @@ builder.Services.AddScoped<GetReservationUseCase>();
 builder.Services.AddScoped<CancelReservationUseCase>();
 
 builder.Services.AddScoped<IRideGroupRepository, EfRideGroupRepository>();
+
+builder.Services.AddSingleton<IPasswordHasher, AspNetPasswordHasher>();
 
 builder.Services.AddScoped<IUserRepository, EfUserRepository>();
 builder.Services.AddScoped<RegisterUserUseCase>();

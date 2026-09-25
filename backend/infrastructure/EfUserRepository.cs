@@ -21,6 +21,14 @@ namespace Infrastructure.Users
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
+        public Task<DomainUser?> FindByEmailAsync(string email)
+        {
+            return _db.Users
+                .Include(u => u.Rider)
+                .Include(u => u.Driver)
+                .FirstOrDefaultAsync(u => u.Email == email);
+        }
+
         public async Task AddAsync(DomainUser user)
         {
             _db.Users.Add(user);

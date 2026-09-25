@@ -51,6 +51,7 @@ namespace Infrastructure
                 user.Property(u => u.Id).HasColumnName("id").ValueGeneratedNever();
                 user.Property(u => u.Email).HasColumnName("email").HasMaxLength(254).IsRequired();
                 user.HasIndex(u => u.Email).IsUnique();
+                user.Property(u => u.PasswordHash).HasColumnName("password_hash").HasMaxLength(255).IsRequired();
                 user.Property(u => u.LastName).HasColumnName("last_name").HasMaxLength(50).IsRequired();
                 user.Property(u => u.FirstName).HasColumnName("first_name").HasMaxLength(50).IsRequired();
                 user.Property(u => u.KanaLastName).HasColumnName("kana_last_name").HasMaxLength(50).IsRequired();

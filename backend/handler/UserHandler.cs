@@ -26,12 +26,17 @@ namespace Handler.Users
             {
                 var user = await useCase.ExecuteAsync(
                     request.Email,
+                    request.Password,
                     request.LastName,
                     request.FirstName,
                     request.KanaLastName,
                     request.KanaFirstName,
                     role);
                 return Results.Created($"/api/users/{user.Id}", new DataResponse<UserResponse> { Data = ToResponse(user) });
+            }
+            catch (EmailAlreadyRegisteredException)
+            {
+                return ConflictError("このメールアドレスはすでに登録されています");
             }
             catch (ArgumentException ex)
             {

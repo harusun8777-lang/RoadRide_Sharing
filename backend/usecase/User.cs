@@ -8,6 +8,7 @@ namespace Usecase.User
     public interface IUserRepository
     {
         Task<DomainUser?> FindByIdAsync(Guid id);
+        Task<DomainUser?> FindByEmailAsync(string email);
         Task AddAsync(DomainUser user);
         Task UpdateAsync(DomainUser user);
     }
@@ -23,24 +24,55 @@ namespace Usecase.User
         }
     }
 
+    public interface IPasswordHasher
+    {
+        string Hash(string password);
+        bool Verify(string passwordHash, string password);
+    }
+
+    public class EmailAlreadyRegisteredException : Exception
+    {
+        public string Email { get; }
+
+        public EmailAlreadyRegisteredException(string email)
+            : base($"Email {email} is already registered.")
+        {
+            Email = email;
+        }
+    }
+
     public class RegisterUserUseCase
     {
-        private readonly IUserRepository _userRepository;
+        public const int MinPasswordLength = 8;
+        public const int MaxPasswordLength = 128;
 
-        public RegisterUserUseCase(IUserRepository userRepository)
+        private readonly IUserRepository _userRepository;
+        private readonly IPasswordHasher _passwordHasher;
+
+        public RegisterUserUseCase(IUserRepository userRepository, IPasswordHasher passwordHasher)
         {
             _userRepository = userRepository;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<DomainUser> ExecuteAsync(
             string email,
+            string password,
             string lastName,
             string firstName,
             string kanaLastName,
             string kanaFirstName,
             UserRole role)
         {
-            var user = DomainUser.Create(email, lastName, firstName, kanaLastName, kanaFirstName, role);
+            if (password is null || password.Length < MinPasswordLength || password.Length > MaxPasswordLength)
+                throw new ArgumentException(
+                    $"password must be {MinPasswordLength} to {MaxPasswordLength} characters.", nameof(password));
+
+            if (!string.IsNullOrWhiteSpace(email) && await _userRepository.FindByEmailAsync(email.Trim()) is not null)
+                throw new EmailAlreadyRegisteredException(email.Trim());
+
+            var user = DomainUser.Create(
+                email, _passwordHasher.Hash(password), lastName, firstName, kanaLastName, kanaFirstName, role);
             await _userRepository.AddAsync(user);
             return user;
         }
