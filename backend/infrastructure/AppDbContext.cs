@@ -40,7 +40,14 @@ namespace Infrastructure
                 user.ToTable("users");
                 user.HasKey(u => u.Id);
                 user.Property(u => u.Id).HasColumnName("id").ValueGeneratedNever();
-                user.Property(u => u.Name).HasColumnName("name").HasMaxLength(100).IsRequired();
+                user.Property(u => u.Email).HasColumnName("email").HasMaxLength(254).IsRequired();
+                user.HasIndex(u => u.Email).IsUnique();
+                user.Property(u => u.LastName).HasColumnName("last_name").HasMaxLength(50).IsRequired();
+                user.Property(u => u.FirstName).HasColumnName("first_name").HasMaxLength(50).IsRequired();
+                user.Property(u => u.KanaLastName).HasColumnName("kana_last_name").HasMaxLength(50).IsRequired();
+                user.Property(u => u.KanaFirstName).HasColumnName("kana_first_name").HasMaxLength(50).IsRequired();
+                user.Ignore(u => u.FullName);
+                user.Ignore(u => u.KanaFullName);
                 user.Property(u => u.Role).HasColumnName("role").HasMaxLength(20).HasConversion(UserRoleConverter).IsRequired();
                 user.Property(u => u.CreatedAt).HasColumnName("created_at").HasConversion(UtcConverter);
             });

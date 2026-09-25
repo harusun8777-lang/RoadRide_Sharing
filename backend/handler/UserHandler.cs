@@ -1,22 +1,9 @@
-using System.Text.Json.Serialization;
 using Usecase.User;
 using DomainUser = Domain.Users.User;
 using DomainUserRole = Domain.Users.UserRole;
 
 namespace Handler.Users
 {
-    public record RegisterUserRequest(
-        [property: JsonPropertyName("name")] string Name,
-        [property: JsonPropertyName("role")] string Role);
-
-    public class UserResponse
-    {
-        [JsonPropertyName("id")] public string Id { get; init; } = string.Empty;
-        [JsonPropertyName("name")] public string Name { get; init; } = string.Empty;
-        [JsonPropertyName("role")] public string Role { get; init; } = string.Empty;
-        [JsonPropertyName("created_at")] public DateTime CreatedAt { get; init; }
-    }
-
     public static class UserHandler
     {
         public static RouteGroupBuilder MapUserEndpoints(this RouteGroupBuilder group)
@@ -35,8 +22,14 @@ namespace Handler.Users
 
             try
             {
-                var user = await useCase.ExecuteAsync(request.Name, role);
-                return Results.Created($"/api/users/{user.Id}", new { data = ToResponse(user) });
+                var user = await useCase.ExecuteAsync(
+                    request.Email,
+                    request.LastName,
+                    request.FirstName,
+                    request.KanaLastName,
+                    request.KanaFirstName,
+                    role);
+                return Results.Created($"/api/users/{user.Id}", new DataResponse<UserResponse> { Data = ToResponse(user) });
             }
             catch (ArgumentException ex)
             {
@@ -51,7 +44,7 @@ namespace Handler.Users
             try
             {
                 var user = await useCase.ExecuteAsync(userId);
-                return Results.Ok(new { data = ToResponse(user) });
+                return Results.Ok(new DataResponse<UserResponse> { Data = ToResponse(user) });
             }
             catch (UserNotFoundException)
             {
@@ -62,7 +55,11 @@ namespace Handler.Users
         private static UserResponse ToResponse(DomainUser user) => new()
         {
             Id = user.Id.ToString(),
-            Name = user.Name,
+            Email = user.Email,
+            LastName = user.LastName,
+            FirstName = user.FirstName,
+            KanaLastName = user.KanaLastName,
+            KanaFirstName = user.KanaFirstName,
             Role = ToRoleString(user.Role),
             CreatedAt = user.CreatedAt
         };
@@ -84,19 +81,19 @@ namespace Handler.Users
             }
         }
 
-        private static IResult ValidationError(string field, string message) => Results.UnprocessableEntity(new
+        private static IResult ValidationError(string field, string message) => Results.UnprocessableEntity(new ErrorResponse
         {
-            error = new
+            Error = new ErrorBody
             {
-                code = "VALIDATION_ERROR",
-                message = "入力内容を確認してください",
-                details = new[] { new { field, message } }
+                Code = "VALIDATION_ERROR",
+                Message = "入力内容を確認してください",
+                Details = [new ErrorDetail { Field = field, Message = message }]
             }
         });
 
-        private static IResult NotFoundError(string message) => Results.NotFound(new
+        private static IResult NotFoundError(string message) => Results.NotFound(new ErrorResponse
         {
-            error = new { code = "NOT_FOUND", message }
+            Error = new ErrorBody { Code = "NOT_FOUND", Message = message }
         });
     }
 }

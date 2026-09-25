@@ -13,7 +13,11 @@ http:
     type: json
     data: |-
       {
-        "name": "山田太郎",
+        "email": "taro.yamada@example.com",
+        "last_name": "山田",
+        "first_name": "太郎",
+        "kana_last_name": "ヤマダ",
+        "kana_first_name": "タロウ",
         "role": "rider"
       }
 

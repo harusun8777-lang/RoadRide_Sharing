@@ -30,9 +30,15 @@ namespace Usecase.User
             _userRepository = userRepository;
         }
 
-        public async Task<DomainUser> ExecuteAsync(string name, UserRole role)
+        public async Task<DomainUser> ExecuteAsync(
+            string email,
+            string lastName,
+            string firstName,
+            string kanaLastName,
+            string kanaFirstName,
+            UserRole role)
         {
-            var user = DomainUser.Create(name, role);
+            var user = DomainUser.Create(email, lastName, firstName, kanaLastName, kanaFirstName, role);
             await _userRepository.AddAsync(user);
             return user;
         }

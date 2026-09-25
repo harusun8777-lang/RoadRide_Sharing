@@ -21,9 +21,14 @@ erDiagram
 
     USER {
         string id PK
-        string name
-        string role
+        string displayName
+        string firstName
+        string lastName
+        string kanaFirstName
+        string kanaLastName
+        string email
         datetime created_at
+        datatime updated_at
     }
 
     RESERVATION {
