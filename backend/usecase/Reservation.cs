@@ -107,10 +107,19 @@ namespace Usecase.Reservation
             _reservationRepository = reservationRepository;
         }
 
-        public async Task<DomainReservation> ExecuteAsync(Guid id)
+        public async Task<DomainReservation> ExecuteAsync(Guid id, Guid userId)
         {
-            return await _reservationRepository.FindByIdAsync(id)
-                ?? throw new ReservationNotFoundException(id);
+            return await FindOwnedAsync(_reservationRepository, id, userId);
+        }
+
+        // 他人の予約は存在自体を知らせないため、見つからない扱いにする
+        internal static async Task<DomainReservation> FindOwnedAsync(
+            IReservationRepository repository, Guid id, Guid userId)
+        {
+            var reservation = await repository.FindByIdAsync(id);
+            if (reservation is null || reservation.UserId != userId)
+                throw new ReservationNotFoundException(id);
+            return reservation;
         }
     }
 
@@ -123,10 +132,9 @@ namespace Usecase.Reservation
             _reservationRepository = reservationRepository;
         }
 
-        public async Task<DomainReservation> ExecuteAsync(Guid id, string? reason)
+        public async Task<DomainReservation> ExecuteAsync(Guid id, Guid userId, string? reason)
         {
-            var reservation = await _reservationRepository.FindByIdAsync(id)
-                ?? throw new ReservationNotFoundException(id);
+            var reservation = await GetReservationUseCase.FindOwnedAsync(_reservationRepository, id, userId);
 
             reservation.Cancel(reason);
             await _reservationRepository.UpdateAsync(reservation);

@@ -4,7 +4,6 @@ namespace Handler.Reservations
 {
     public class RegisterReservationRequest
     {
-        [JsonPropertyName("user_id")] public string UserId { get; init; } = string.Empty;
         [JsonPropertyName("pickup_location")] public string PickupLocation { get; init; } = string.Empty;
         [JsonPropertyName("destination")] public string Destination { get; init; } = string.Empty;
         [JsonPropertyName("requested_pickup_at")] public DateTime RequestedPickupAt { get; init; }

@@ -1,15 +1,14 @@
 info:
-  name: Get User
+  name: Get Me
   type: http
   seq: 2
 
 http:
   method: GET
-  url: "{{baseUrl}}/api/users/:userId"
-  params:
-    - name: userId
-      value: cd0b97db-60dc-40c3-9523-86633cf4389f
-      type: path
+  url: "{{baseUrl}}/api/users/me"
+  headers:
+    - name: Authorization
+      value: "Bearer {{accessToken}}"
 
 settings:
   encodeUrl: true

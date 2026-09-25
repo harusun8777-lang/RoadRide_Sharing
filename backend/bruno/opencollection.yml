@@ -18,6 +18,8 @@ request:
   variables:
     - name: baseUrl
       value: http://localhost:8080
+    - name: accessToken
+      value: ""
 bundled: false
 extensions:
   bruno:

@@ -7,13 +7,14 @@ http:
   method: POST
   url: "{{baseUrl}}/api/reservations"
   headers:
+    - name: Authorization
+      value: "Bearer {{accessToken}}"
     - name: Content-Type
       value: application/json
   body:
     type: json
     data: |-
       {
-        "user_id": "00000000-0000-0000-0000-000000000000",
         "pickup_location": "東京駅",
         "destination": "羽田空港",
         "requested_pickup_at": "2026-09-30T09:00:00Z",

@@ -78,19 +78,21 @@ namespace Usecase.User
         }
     }
 
-    public class GetUserUseCase
+    // JWT の sub（ユーザーID）から、ログイン中のユーザーを引く。見つからなければ null
+    public class GetCurrentUserUseCase
     {
         private readonly IUserRepository _userRepository;
 
-        public GetUserUseCase(IUserRepository userRepository)
+        public GetCurrentUserUseCase(IUserRepository userRepository)
         {
             _userRepository = userRepository;
         }
 
-        public async Task<DomainUser> ExecuteAsync(Guid id)
+        public Task<DomainUser?> ExecuteAsync(string? subject)
         {
-            return await _userRepository.FindByIdAsync(id)
-                ?? throw new UserNotFoundException(id);
+            return Guid.TryParse(subject, out var id)
+                ? _userRepository.FindByIdAsync(id)
+                : Task.FromResult<DomainUser?>(null);
         }
     }
 

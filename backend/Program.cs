@@ -1,3 +1,4 @@
+using Handler.Auth;
 using Handler.Reservations;
 using Handler.Users;
 using Infrastructure;
@@ -5,7 +6,9 @@ using Infrastructure.Auth;
 using Infrastructure.Reservations;
 using Infrastructure.RideGroups;
 using Infrastructure.Users;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Usecase.Auth;
 using Usecase.Reservation;
 using Usecase.RideGroup;
 using Usecase.User;
@@ -15,6 +18,19 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// ログイン時に自前で発行した JWT（HS256）を検証する。設定値が不正なら起動時に止める
+var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
+jwtOptions.Validate();
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = jwtOptions.CreateValidationParameters();
+    });
+builder.Services.AddAuthorization();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
@@ -30,10 +46,12 @@ builder.Services.AddScoped<CancelReservationUseCase>();
 builder.Services.AddScoped<IRideGroupRepository, EfRideGroupRepository>();
 
 builder.Services.AddSingleton<IPasswordHasher, AspNetPasswordHasher>();
+builder.Services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
+builder.Services.AddScoped<LoginUseCase>();
 
 builder.Services.AddScoped<IUserRepository, EfUserRepository>();
 builder.Services.AddScoped<RegisterUserUseCase>();
-builder.Services.AddScoped<GetUserUseCase>();
+builder.Services.AddScoped<GetCurrentUserUseCase>();
 builder.Services.AddScoped<AddUserRoleUseCase>();
 builder.Services.AddScoped<SwitchUserRoleUseCase>();
 
@@ -54,7 +72,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var apiGroup = app.MapGroup("/api");
+app.UseAuthentication();
+app.UseAuthorization();
+
+var apiGroup = app.MapGroup("/api").RequireAuthorization();
+apiGroup.MapAuthEndpoints();
 apiGroup.MapReservationEndpoints();
 apiGroup.MapUserEndpoints();
 

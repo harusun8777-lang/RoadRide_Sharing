@@ -1,13 +1,14 @@
-using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Usecase.Reservation;
 using DomainReservation = Domain.Reservations.Reservation;
 using DomainReservationStatus = Domain.Reservations.ReservationStatus;
-using UserNotFoundException = Usecase.User.UserNotFoundException;
+using GetCurrentUserUseCase = Usecase.User.GetCurrentUserUseCase;
 
 namespace Handler.Reservations
 {
     public static class ReservationHandler
     {
+        // 予約はすべて本人（JWT の sub）のものだけを扱う
         public static RouteGroupBuilder MapReservationEndpoints(this RouteGroupBuilder group)
         {
             group.MapPost("/reservations", RegisterAsync).WithName("RegisterReservation");
@@ -18,16 +19,19 @@ namespace Handler.Reservations
         }
 
         private static async Task<IResult> RegisterAsync(
+            ClaimsPrincipal principal,
             RegisterReservationRequest request,
+            GetCurrentUserUseCase currentUser,
             RegisterReservationUseCase useCase)
         {
-            if (!Guid.TryParse(request.UserId, out var userId))
-                return ValidationError("user_id", "利用者IDの形式が不正です");
+            var me = await currentUser.ExecuteAsync(principal.FindSubject());
+            if (me is null)
+                return Results.Unauthorized();
 
             try
             {
                 var reservation = await useCase.ExecuteAsync(
-                    userId,
+                    me.Id,
                     request.PickupLocation,
                     request.Destination,
                     request.RequestedPickupAt,
@@ -37,10 +41,6 @@ namespace Handler.Reservations
                 return Results.Created(
                     $"/api/reservations/{reservation.Id}",
                     new DataResponse<ReservationResponse> { Data = ToResponse(reservation) });
-            }
-            catch (UserNotFoundException)
-            {
-                return ValidationError("user_id", "指定された利用者が見つかりません");
             }
             catch (InvalidOperationException)
             {
@@ -53,8 +53,9 @@ namespace Handler.Reservations
         }
 
         private static async Task<IResult> ListAsync(
+            ClaimsPrincipal principal,
+            GetCurrentUserUseCase currentUser,
             ListReservationsUseCase useCase,
-            [FromQuery(Name = "user_id")] Guid? userId,
             DateOnly? date,
             string? status,
             DateTime? from,
@@ -62,6 +63,10 @@ namespace Handler.Reservations
             int page = 1,
             int limit = 50)
         {
+            var me = await currentUser.ExecuteAsync(principal.FindSubject());
+            if (me is null)
+                return Results.Unauthorized();
+
             DomainReservationStatus? parsedStatus = null;
             if (!string.IsNullOrWhiteSpace(status))
             {
@@ -70,7 +75,7 @@ namespace Handler.Reservations
                 parsedStatus = s;
             }
 
-            var filter = new ReservationListFilter(userId, date, parsedStatus, from, to, page, limit);
+            var filter = new ReservationListFilter(me.Id, date, parsedStatus, from, to, page, limit);
             var (items, total) = await useCase.ExecuteAsync(filter);
 
             return Results.Ok(new ListResponse<ReservationSummaryResponse>
@@ -82,11 +87,17 @@ namespace Handler.Reservations
 
         private static async Task<IResult> GetAsync(
             Guid reservationId,
+            ClaimsPrincipal principal,
+            GetCurrentUserUseCase currentUser,
             GetReservationUseCase useCase)
         {
+            var me = await currentUser.ExecuteAsync(principal.FindSubject());
+            if (me is null)
+                return Results.Unauthorized();
+
             try
             {
-                var reservation = await useCase.ExecuteAsync(reservationId);
+                var reservation = await useCase.ExecuteAsync(reservationId, me.Id);
                 return Results.Ok(new DataResponse<ReservationResponse> { Data = ToResponse(reservation) });
             }
             catch (ReservationNotFoundException)
@@ -98,11 +109,17 @@ namespace Handler.Reservations
         private static async Task<IResult> CancelAsync(
             Guid reservationId,
             CancelReservationRequest request,
+            ClaimsPrincipal principal,
+            GetCurrentUserUseCase currentUser,
             CancelReservationUseCase useCase)
         {
+            var me = await currentUser.ExecuteAsync(principal.FindSubject());
+            if (me is null)
+                return Results.Unauthorized();
+
             try
             {
-                var reservation = await useCase.ExecuteAsync(reservationId, request.Reason);
+                var reservation = await useCase.ExecuteAsync(reservationId, me.Id, request.Reason);
                 return Results.Ok(new DataResponse<CancelReservationResponse>
                 {
                     Data = new CancelReservationResponse

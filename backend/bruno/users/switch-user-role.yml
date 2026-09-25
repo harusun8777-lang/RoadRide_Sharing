@@ -5,12 +5,10 @@ info:
 
 http:
   method: PUT
-  url: "{{baseUrl}}/api/users/:userId/active-role"
-  params:
-    - name: userId
-      value: cd0b97db-60dc-40c3-9523-86633cf4389f
-      type: path
+  url: "{{baseUrl}}/api/users/me/active-role"
   headers:
+    - name: Authorization
+      value: "Bearer {{accessToken}}"
     - name: Content-Type
       value: application/json
   body:

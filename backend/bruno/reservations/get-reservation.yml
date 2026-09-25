@@ -10,6 +10,9 @@ http:
     - name: reservationId
       value: ""
       type: path
+  headers:
+    - name: Authorization
+      value: "Bearer {{accessToken}}"
 
 settings:
   encodeUrl: true

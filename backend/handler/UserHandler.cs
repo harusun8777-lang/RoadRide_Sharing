@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Usecase.User;
 using DomainUser = Domain.Users.User;
 using DomainUserRole = Domain.Users.UserRole;
@@ -6,12 +7,13 @@ namespace Handler.Users
 {
     public static class UserHandler
     {
+        // 登録以外は本人（JWT の sub）に対する操作。他人のユーザー情報は扱わない
         public static RouteGroupBuilder MapUserEndpoints(this RouteGroupBuilder group)
         {
-            group.MapPost("/users", RegisterAsync).WithName("RegisterUser");
-            group.MapGet("/users/{userId:guid}", GetAsync).WithName("GetUser");
-            group.MapPost("/users/{userId:guid}/roles", AddRoleAsync).WithName("AddUserRole");
-            group.MapPut("/users/{userId:guid}/active-role", SwitchRoleAsync).WithName("SwitchUserRole");
+            group.MapPost("/users", RegisterAsync).WithName("RegisterUser").AllowAnonymous();
+            group.MapGet("/users/me", GetMeAsync).WithName("GetMe");
+            group.MapPost("/users/me/roles", AddRoleAsync).WithName("AddUserRole");
+            group.MapPut("/users/me/active-role", SwitchRoleAsync).WithName("SwitchUserRole");
             return group;
         }
 
@@ -32,7 +34,7 @@ namespace Handler.Users
                     request.KanaLastName,
                     request.KanaFirstName,
                     role);
-                return Results.Created($"/api/users/{user.Id}", new DataResponse<UserResponse> { Data = ToResponse(user) });
+                return Results.Created("/api/users/me", new DataResponse<UserResponse> { Data = ToResponse(user) });
             }
             catch (EmailAlreadyRegisteredException)
             {
@@ -44,37 +46,34 @@ namespace Handler.Users
             }
         }
 
-        private static async Task<IResult> GetAsync(
-            Guid userId,
-            GetUserUseCase useCase)
+        private static async Task<IResult> GetMeAsync(
+            ClaimsPrincipal principal,
+            GetCurrentUserUseCase currentUser)
         {
-            try
-            {
-                var user = await useCase.ExecuteAsync(userId);
-                return Results.Ok(new DataResponse<UserResponse> { Data = ToResponse(user) });
-            }
-            catch (UserNotFoundException)
-            {
-                return NotFoundError("指定された利用者が見つかりません");
-            }
+            var user = await currentUser.ExecuteAsync(principal.FindSubject());
+            if (user is null)
+                return Results.Unauthorized();
+
+            return Results.Ok(new DataResponse<UserResponse> { Data = ToResponse(user) });
         }
 
         private static async Task<IResult> AddRoleAsync(
-            Guid userId,
+            ClaimsPrincipal principal,
             UserRoleRequest request,
+            GetCurrentUserUseCase currentUser,
             AddUserRoleUseCase useCase)
         {
+            var me = await currentUser.ExecuteAsync(principal.FindSubject());
+            if (me is null)
+                return Results.Unauthorized();
+
             if (!TryParseRole(request.Role, out var role))
                 return ValidationError("role", "利用者区分の値が不正です");
 
             try
             {
-                var user = await useCase.ExecuteAsync(userId, role);
+                var user = await useCase.ExecuteAsync(me.Id, role);
                 return Results.Ok(new DataResponse<UserResponse> { Data = ToResponse(user) });
-            }
-            catch (UserNotFoundException)
-            {
-                return NotFoundError("指定された利用者が見つかりません");
             }
             catch (InvalidOperationException)
             {
@@ -83,21 +82,22 @@ namespace Handler.Users
         }
 
         private static async Task<IResult> SwitchRoleAsync(
-            Guid userId,
+            ClaimsPrincipal principal,
             UserRoleRequest request,
+            GetCurrentUserUseCase currentUser,
             SwitchUserRoleUseCase useCase)
         {
+            var me = await currentUser.ExecuteAsync(principal.FindSubject());
+            if (me is null)
+                return Results.Unauthorized();
+
             if (!TryParseRole(request.Role, out var role))
                 return ValidationError("role", "利用者区分の値が不正です");
 
             try
             {
-                var user = await useCase.ExecuteAsync(userId, role);
+                var user = await useCase.ExecuteAsync(me.Id, role);
                 return Results.Ok(new DataResponse<UserResponse> { Data = ToResponse(user) });
-            }
-            catch (UserNotFoundException)
-            {
-                return NotFoundError("指定された利用者が見つかりません");
             }
             catch (UnfinishedActivityExistsException ex)
             {
@@ -149,11 +149,6 @@ namespace Handler.Users
                 Message = "入力内容を確認してください",
                 Details = [new ErrorDetail { Field = field, Message = message }]
             }
-        });
-
-        private static IResult NotFoundError(string message) => Results.NotFound(new ErrorResponse
-        {
-            Error = new ErrorBody { Code = "NOT_FOUND", Message = message }
         });
 
         private static IResult ConflictError(string message) => Results.Conflict(new ErrorResponse
