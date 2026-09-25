@@ -1,5 +1,6 @@
 using DomainUser = Domain.Users.User;
 using UserRole = Domain.Users.UserRole;
+using IReservationRepository = Usecase.Reservation.IReservationRepository;
 
 namespace Usecase.User
 {
@@ -80,19 +81,40 @@ namespace Usecase.User
         }
     }
 
+    public class UnfinishedReservationExistsException : InvalidOperationException
+    {
+        public Guid UserId { get; }
+
+        public UnfinishedReservationExistsException(Guid userId)
+            : base($"User {userId} has unfinished reservations.")
+        {
+            UserId = userId;
+        }
+    }
+
     public class SwitchUserRoleUseCase
     {
         private readonly IUserRepository _userRepository;
+        private readonly IReservationRepository _reservationRepository;
 
-        public SwitchUserRoleUseCase(IUserRepository userRepository)
+        public SwitchUserRoleUseCase(
+            IUserRepository userRepository,
+            IReservationRepository reservationRepository)
         {
             _userRepository = userRepository;
+            _reservationRepository = reservationRepository;
         }
 
         public async Task<DomainUser> ExecuteAsync(Guid id, UserRole role)
         {
             var user = await _userRepository.FindByIdAsync(id)
                 ?? throw new UserNotFoundException(id);
+
+            // Rider から離れるときは、予約が完了かキャンセルになるまで切り替えさせない
+            if (user.ActiveRole == UserRole.Rider
+                && role != UserRole.Rider
+                && await _reservationRepository.HasUnfinishedAsync(id))
+                throw new UnfinishedReservationExistsException(id);
 
             user.SwitchRole(role);
             await _userRepository.UpdateAsync(user);

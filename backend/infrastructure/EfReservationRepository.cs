@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Usecase.Reservation;
 using DomainReservation = Domain.Reservations.Reservation;
+using DomainReservationStatus = Domain.Reservations.ReservationStatus;
 
 namespace Infrastructure.Reservations
 {
@@ -58,6 +59,14 @@ namespace Infrastructure.Reservations
                 .ToListAsync();
 
             return (items, total);
+        }
+
+        public Task<bool> HasUnfinishedAsync(Guid userId)
+        {
+            return _db.Reservations.AnyAsync(r =>
+                r.UserId == userId
+                && r.Status != DomainReservationStatus.Completed
+                && r.Status != DomainReservationStatus.Cancelled);
         }
 
         public async Task AddAsync(DomainReservation reservation)

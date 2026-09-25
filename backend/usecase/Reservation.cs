@@ -30,6 +30,8 @@ namespace Usecase.Reservation
     {
         Task<DomainReservation?> FindByIdAsync(Guid id);
         Task<(IReadOnlyList<DomainReservation> Items, int Total)> ListAsync(ReservationListFilter filter);
+        // 完了・キャンセル以外の予約が残っているか
+        Task<bool> HasUnfinishedAsync(Guid userId);
         Task AddAsync(DomainReservation reservation);
         Task UpdateAsync(DomainReservation reservation);
     }

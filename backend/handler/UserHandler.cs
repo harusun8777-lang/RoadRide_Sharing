@@ -94,6 +94,10 @@ namespace Handler.Users
             {
                 return NotFoundError("指定された利用者が見つかりません");
             }
+            catch (UnfinishedReservationExistsException)
+            {
+                return ConflictError("完了またはキャンセルされていない予約があるため切り替えできません");
+            }
             catch (InvalidOperationException)
             {
                 return ConflictError("この利用者区分は登録されていません");
