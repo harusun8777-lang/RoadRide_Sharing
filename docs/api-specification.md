@@ -9,16 +9,26 @@
 - 文字コード: UTF-8
 - ベースパス: `/api`
 - 日時形式: ISO 8601形式。例: `2026-09-21T10:00:00+09:00`
-- MVPでは認証を省略し、ユーザーIDはリクエストまたは仮固定値で扱う。これは開発用であり、本番運用では認証と権限確認を追加する。
+- 認証: メールアドレスとパスワードでログインして取得した JWT を `Authorization: Bearer <token>` ヘッダーで送る。詳細は「1.1 認証」を参照。
+
+### 1.1 認証
+
+- `POST /api/users`（利用者登録）と `POST /api/auth/login`（ログイン）以外の `/api` エンドポイントは JWT が必要。トークンがない、または不正・期限切れの場合は `401 Unauthorized` を返す。
+- JWT は本APIがログイン時に発行する。署名は HS256 で、署名・発行者（`iss`）・受け手（`aud`）・有効期限（`exp`）を検証する。有効期限の初期値は60分。
+- 利用者は JWT の `sub`（ユーザーID）で識別する。リクエストボディやクエリで `user_id` は受け取らない。
+- 予約など利用者のデータは本人のものだけを扱う。他人の予約IDを指定した場合は、存在しない場合と同じく `404 NOT_FOUND` を返す。
+- MVPではリフレッシュトークンを扱わない。有効期限が切れたら再ログインする。
+- パスワードは8〜128文字とし、ハッシュ化（PBKDF2）して保存する。
 
 ## 2. エンドポイント一覧
 
 | メソッド | パス | 用途 | 利用者 |
 | --- | --- | --- | --- |
-| `POST` | `/api/users` | ユーザー登録 | 共通 |
-| `GET` | `/api/users/{user_id}` | ユーザー取得 | 共通 |
-| `POST` | `/api/users/{user_id}/roles` | 区分（利用者・運転手）の追加 | 共通 |
-| `PUT` | `/api/users/{user_id}/active-role` | 稼働区分の切り替え | 共通 |
+| `POST` | `/api/auth/login` | ログイン（JWTの発行） | 共通 |
+| `POST` | `/api/users` | 利用者登録 | 共通 |
+| `GET` | `/api/users/me` | 本人のユーザー情報取得 | 共通 |
+| `POST` | `/api/users/me/roles` | 区分（利用者・運転手）の追加 | 共通 |
+| `PUT` | `/api/users/me/active-role` | 稼働区分の切り替え | 共通 |
 | `POST` | `/api/reservations` | 予約登録 | 利用者 |
 | `GET` | `/api/reservations` | 予約一覧取得 | 利用者 |
 | `GET` | `/api/reservations/{reservation_id}` | 予約詳細取得 | 利用者 |
@@ -26,7 +36,7 @@
 | `GET` | `/api/reservations/{reservation_id}/candidates` | 配車候補一覧取得 | 利用者 |
 | `POST` | `/api/reservations/{reservation_id}/select` | 配車候補の選択・確定 | 利用者 |
 | `POST` | `/api/matching/candidates` | 乗合候補作成（システム内部） | システム |
-| `GET` | `/api/drivers/{user_id}/ride-groups` | 担当運行一覧取得 | 運転手 |
+| `GET` | `/api/drivers/me/ride-groups` | 担当運行一覧取得 | 運転手 |
 | `GET` | `/api/ride-groups/{ride_group_id}` | 便（乗合グループ）詳細取得 | 運転手 |
 | `POST` | `/api/ride-groups/{ride_group_id}/start` | 運行開始の記録 | 運転手 |
 | `POST` | `/api/ride-groups/{ride_group_id}/complete` | 乗車完了の記録 | 運転手 |
@@ -61,21 +71,53 @@
 }
 ```
 
-## 4. ユーザーAPI
+## 4. 認証API
 
-1つのアカウントで利用者（`rider`）と運転手（`driver`）の両方を登録できる。同時に稼働できるのは `active_role` の1つだけとする。
+### 4.1 ログイン
 
-### 4.1 ユーザー登録
+`POST /api/auth/login`
 
-`POST /api/users`
-
-指定した `role` が最初に登録される区分となり、そのまま稼働区分になる。
+JWT は不要。
 
 #### リクエスト
 
 ```json
 {
   "email": "taro.yamada@example.com",
+  "password": "password1234"
+}
+```
+
+#### 成功レスポンス: `200 OK`
+
+```json
+{
+  "data": {
+    "access_token": "eyJhbGciOiJIUzI1NiIs...",
+    "token_type": "Bearer",
+    "expires_at": "2026-09-20T13:00:00Z"
+  }
+}
+```
+
+メールアドレスが未登録、またはパスワードが違う場合は、どちらかを区別せず `401 INVALID_CREDENTIALS` を返す。
+
+## 5. ユーザーAPI
+
+1つのアカウントで利用者（`rider`）と運転手（`driver`）の両方を登録できる。同時に稼働できるのは `active_role` の1つだけとする。
+
+### 5.1 利用者登録
+
+`POST /api/users`
+
+JWT は不要。指定した `role` が最初に登録される区分となり、そのまま稼働区分になる。同じメールアドレスで登録済みの場合は `409 CONFLICT` を返す。登録後は `POST /api/auth/login` でログインする。
+
+#### リクエスト
+
+```json
+{
+  "email": "taro.yamada@example.com",
+  "password": "password1234",
   "last_name": "山田",
   "first_name": "太郎",
   "kana_last_name": "ヤマダ",
@@ -102,15 +144,15 @@
 }
 ```
 
-### 4.2 ユーザー取得
+### 5.2 本人のユーザー情報取得
 
-`GET /api/users/{user_id}`
+`GET /api/users/me`
 
-レスポンスは 4.1 と同じ形式。
+レスポンスは 5.1 と同じ形式。
 
-### 4.3 区分の追加
+### 5.3 区分の追加
 
-`POST /api/users/{user_id}/roles`
+`POST /api/users/me/roles`
 
 #### リクエスト
 
@@ -122,9 +164,9 @@
 
 成功時は `200 OK` でユーザー情報を返す。すでに登録済みの区分の場合は `409 CONFLICT` を返す。
 
-### 4.4 稼働区分の切り替え
+### 5.4 稼働区分の切り替え
 
-`PUT /api/users/{user_id}/active-role`
+`PUT /api/users/me/active-role`
 
 #### リクエスト
 
@@ -144,9 +186,9 @@
 
 未完了の予約とは `matching`、`confirmed`、`in_progress` の予約を指す。未完了の運行とは `confirmed`、`in_progress` の便を指す。運転手が切り替えた場合、その運転手の `proposed` の候補は取り消す。
 
-## 5. 予約API
+## 6. 予約API
 
-### 5.1 予約登録
+### 6.1 予約登録
 
 `POST /api/reservations`
 
@@ -154,7 +196,6 @@
 
 ```json
 {
-  "user_id": "user-001",
   "pickup_location": "電波学園前",
   "destination": "市役所",
   "requested_pickup_at": "2026-09-21T10:00:00+09:00",
@@ -163,7 +204,7 @@
 }
 ```
 
-`user_id` のユーザーが利用者（`rider`）として稼働中でない場合は `409 CONFLICT` を返す。
+予約者は JWT の本人となる。本人が利用者（`rider`）として稼働中でない場合は `409 CONFLICT` を返す。
 
 #### 成功レスポンス: `201 Created`
 
@@ -184,15 +225,16 @@
 }
 ```
 
-### 5.2 予約一覧取得
+### 6.2 予約一覧取得
 
 `GET /api/reservations`
+
+本人の予約だけを返す。
 
 #### クエリパラメータ
 
 | パラメータ | 必須 | 説明 |
 | --- | --- | --- |
-| `user_id` | 任意 | 利用者本人の予約だけを取得 |
 | `date` | 任意 | 乗車日。例: `2026-09-21` |
 | `status` | 任意 | `matching`、`confirmed` など |
 | `from` | 任意 | 希望乗車日時の開始 |
@@ -223,7 +265,7 @@
 }
 ```
 
-### 5.3 予約詳細取得
+### 6.3 予約詳細取得
 
 `GET /api/reservations/{reservation_id}`
 
@@ -250,7 +292,7 @@
 }
 ```
 
-### 5.4 予約キャンセル
+### 6.4 予約キャンセル
 
 `POST /api/reservations/{reservation_id}/cancel`
 
@@ -277,7 +319,7 @@
 
 `completed` またはすでに `cancelled` の予約はキャンセルできない。確定済みの便に所属していた場合は、その便から外して運転手に通知する。便の利用者がいなくなった場合は、便も `cancelled` にする。
 
-### 5.5 配車候補一覧取得
+### 6.5 配車候補一覧取得
 
 `GET /api/reservations/{reservation_id}/candidates`
 
@@ -306,7 +348,7 @@
 
 予約が `matching` 以外の場合は空の配列を返す。
 
-### 5.6 配車候補の選択・確定
+### 6.6 配車候補の選択・確定
 
 `POST /api/reservations/{reservation_id}/select`
 
@@ -345,9 +387,9 @@
 
 便が `proposed` だった場合は `confirmed` に更新し、運転手に通知する。
 
-## 6. マッチングAPI
+## 7. マッチングAPI
 
-### 6.1 乗合候補作成
+### 7.1 乗合候補作成
 
 `POST /api/matching/candidates`
 
@@ -392,11 +434,11 @@
 }
 ```
 
-## 7. 運行API（運転手向け）
+## 8. 運行API（運転手向け）
 
-### 7.1 担当運行一覧取得
+### 8.1 担当運行一覧取得
 
-`GET /api/drivers/{user_id}/ride-groups`
+`GET /api/drivers/me/ride-groups`
 
 #### クエリパラメータ
 
@@ -407,19 +449,19 @@
 
 `proposed` の便は運転手には表示しない。
 
-### 7.2 便詳細取得
+### 8.2 便詳細取得
 
 `GET /api/ride-groups/{ride_group_id}`
 
 利用者一覧（氏名、人数、配慮事項）、車両、乗車順、降車順、乗降場所、出発時刻を返す。運転手には自分が担当する便だけを返す。
 
-### 7.3 運行開始
+### 8.3 運行開始
 
 `POST /api/ride-groups/{ride_group_id}/start`
 
 便を `confirmed` から `in_progress` にし、所属する予約も `in_progress` にする。
 
-### 7.4 乗車完了
+### 8.4 乗車完了
 
 `POST /api/ride-groups/{ride_group_id}/complete`
 
@@ -449,7 +491,7 @@
 | `completed` | なし | - |
 | `cancelled` | なし | - |
 
-## 8. 通知API
+## 9. 通知API
 
 ### 通知一覧取得
 
@@ -461,17 +503,19 @@
 
 MVPでは画面内通知のみを対象とし、メールやSMSは対象外とする。運転手への通知（新しい運行の確定、予約のキャンセル）も画面内通知とする。
 
-## 9. HTTPステータスとエラーコード
+## 10. HTTPステータスとエラーコード
 
 | HTTPステータス | エラーコード | 用途 |
 | --- | --- | --- |
 | `400` | `BAD_REQUEST` | リクエスト形式が不正 |
+| `401` | - | JWT がない、または不正・期限切れ |
+| `401` | `INVALID_CREDENTIALS` | ログイン時のメールアドレスまたはパスワードが違う |
 | `404` | `NOT_FOUND` | 指定データが存在しない |
 | `409` | `CONFLICT` | 状態競合、二重登録、定員超過、稼働区分の切り替え不可 |
 | `422` | `VALIDATION_ERROR` | 入力値が要件を満たさない |
 | `500` | `INTERNAL_ERROR` | サーバー内部エラー |
 
-## 10. 二重予約防止
+## 11. 二重予約防止
 
 - 予約登録リクエストには `Idempotency-Key` ヘッダーを付ける。
 - 同じキーを受け取った場合、最初の登録結果を返す。
@@ -479,9 +523,9 @@ MVPでは画面内通知のみを対象とし、メールやSMSは対象外と�
 - 状態変更時は現在の状態を再確認し、古い状態からの上書きを拒否する。
 - 候補の選択時は便の定員を再確認し、同時選択による定員超過を防ぐ。
 
-## 11. 実装優先順位
+## 12. 実装優先順位
 
-1. ユーザーAPI（登録・取得・区分追加・稼働区分切り替え）
+1. ログインとユーザーAPI（登録・取得・区分追加・稼働区分切り替え）
 2. `POST /api/reservations`
 3. `GET /api/reservations`
 4. `GET /api/reservations/{reservation_id}`
@@ -489,6 +533,6 @@ MVPでは画面内通知のみを対象とし、メールやSMSは対象外と�
 6. `POST /api/matching/candidates`
 7. `GET /api/reservations/{reservation_id}/candidates`
 8. `POST /api/reservations/{reservation_id}/select`
-9. `GET /api/drivers/{user_id}/ride-groups`・`GET /api/ride-groups/{ride_group_id}`
+9. `GET /api/drivers/me/ride-groups`・`GET /api/ride-groups/{ride_group_id}`
 10. `POST /api/ride-groups/{ride_group_id}/start`・`/complete`
 11. 通知API

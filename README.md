@@ -66,6 +66,25 @@ dotnet run
 export ConnectionStrings__DefaultConnection="Server=localhost,1433;Database=RoadRideSharing;User Id=sa;Password=<パスワード>;TrustServerCertificate=True"
 ```
 
+### 認証（JWT）
+
+メールアドレスとパスワードでログインし、発行された JWT を `Authorization: Bearer <token>` ヘッダーで送ります。
+
+1. `POST /api/users` で利用者登録（パスワードは8〜128文字）
+2. `POST /api/auth/login` でログインし、レスポンスの `access_token` を受け取る
+3. ほかの `/api` エンドポイントは、この JWT を付けて呼び出す（有効期限は60分）
+
+JWT の署名鍵は設定 `Jwt:SigningKey`（32バイト以上）で指定します。未設定または短すぎる場合は起動時にエラーになります。
+
+| 実行方法 | 署名鍵の指定方法 |
+| --- | --- |
+| Docker Compose | `.env` の `JWT_SIGNING_KEY` |
+| `dotnet run`（Development） | `appsettings.Development.json` の開発用の値 |
+
+本番環境では、十分に長いランダムな値を環境変数 `Jwt__SigningKey` で渡してください。
+
+Bruno で試す場合は、Login リクエストで取得した `access_token` をコレクション変数 `accessToken` に設定してください。
+
 ### データベーススキーマ
 
 マイグレーションは未導入です。起動時に `EnsureCreated()` でDB・テーブルを作成します（既に存在する場合は何もしません）。

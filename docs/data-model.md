@@ -2,7 +2,7 @@
 
 ## 1. 方針
 
-MVPでは、予約を中心に乗合グループ（便）と運転手を関連付ける。配車担当者は置かず、AIが作成した便の候補から利用者が選んで確定する。認証機能は後回しにし、ユーザー識別子は外部認証や仮ユーザーを参照できる形式にする。
+MVPでは、予約を中心に乗合グループ（便）と運転手を関連付ける。配車担当者は置かず、AIが作成した便の候補から利用者が選んで確定する。認証はメールアドレスとパスワードで行い、ログイン時に本APIが JWT を発行する。JWT の `sub` には `users.id` を入れる。
 
 ## 2. ER図
 
@@ -30,6 +30,7 @@ erDiagram
         string kanaFirstName
         string kanaLastName
         string email
+        string password_hash
         string active_role
         datetime created_at
         datatime updated_at
@@ -149,7 +150,8 @@ erDiagram
 | 項目 | 型 | 制約 | 説明 |
 | --- | --- | --- | --- |
 | `id` | string | PK | ユーザー識別子 |
-| `email` | string | UNIQUE、必須 | メールアドレス |
+| `email` | string | UNIQUE、必須 | メールアドレス。ログインIDを兼ねる |
+| `password_hash` | string | 必須 | パスワードのハッシュ（PBKDF2）。平文は保存しない |
 | `last_name` / `first_name` | string | 必須 | 氏名 |
 | `kana_last_name` / `kana_first_name` | string | 必須 | 読み仮名（全角カタカナ） |
 | `active_role` | string | 必須 | 現在稼働中の区分。`rider` または `driver` |
