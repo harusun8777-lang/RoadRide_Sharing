@@ -17,6 +17,7 @@
   });
 
   document.getElementById("register-link").href    = `register.html?${registrationParams}`;
+  if (isDispatcher) document.getElementById("register-link").parentElement.remove();
   document.body.dataset.role                       = isDispatcher ? "dispatcher" : "user";
   document.title                                   = `${roleName}ログイン | RoadRide Sharing`;
   document.getElementById("role-label").textContent = `${roleName}向け`;
@@ -35,6 +36,14 @@
   const emailEl   = document.getElementById("email");
   const passEl    = document.getElementById("password");
   const errorEl   = document.getElementById("login-error");
+
+  if (params.get("reason") === "session-expired") {
+    showError("ログインの有効期限が切れました。もう一度ログインしてください。");
+  }
+
+  form.addEventListener("invalid", (event) => {
+    showError(event.target.validationMessage || "入力内容を確認してください。");
+  }, true);
 
   function setLoading(loading) {
     submitBtn.disabled    = loading;

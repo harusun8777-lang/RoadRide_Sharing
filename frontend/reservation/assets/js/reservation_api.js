@@ -190,6 +190,13 @@ const RoadRideReservationApi = (() => {
     const notes = buildConsiderationNotes(formValue);
     if (notes) body.consideration_notes = notes;
 
+    const fieldErrors = {};
+    if (!body.pickup_location || body.pickup_location.length > 200) fieldErrors.pickup_location = "乗車場所は1〜200文字で入力してください。";
+    if (!body.destination || body.destination.length > 200) fieldErrors.destination = "目的地は1〜200文字で入力してください。";
+    if (!Number.isInteger(body.passenger_count) || body.passenger_count < 1) fieldErrors.passenger_count = "乗車人数は1人以上の整数で入力してください。";
+    if (notes.length > 500) fieldErrors.consideration_notes = "配慮事項は選択項目と備考を合わせて500文字以内で入力してください。";
+    if (Number.isNaN(Date.parse(body.requested_pickup_at))) fieldErrors.requested_pickup_at = "希望乗車日時を正しく入力してください。";
+    if (Object.keys(fieldErrors).length) throw new RoadRideAuth.ApiError(Object.values(fieldErrors)[0], { status: 422, code: "VALIDATION_ERROR", fieldErrors });
     const payload = await RoadRideAuth.apiFetch("/reservations", { method: "POST", body });
     return payload.data;
   }
@@ -212,6 +219,7 @@ const RoadRideReservationApi = (() => {
 
   /** GET /api/reservations/{id}。予約（API の Reservation）を返す */
   async function getReservation(reservationId) {
+    if (!reservationId) throw new RoadRideAuth.ApiError("予約が指定されていません。予約履歴から選び直してください。");
     const payload = await RoadRideAuth.apiFetch(`/reservations/${encodeURIComponent(reservationId)}`, {
       errorMessages: { 404: "指定された予約が見つかりません。" }
     });
@@ -220,7 +228,9 @@ const RoadRideReservationApi = (() => {
 
   /** POST /api/reservations/{id}/cancel。{ id, status, cancellation_reason, cancelled_at } を返す */
   async function cancelReservation(reservationId, reason = "") {
+    if (!reservationId) throw new RoadRideAuth.ApiError("予約が指定されていません。予約履歴から選び直してください。");
     const trimmedReason = reason.trim();
+    if (trimmedReason.length > 500) throw new RoadRideAuth.ApiError("キャンセル理由は500文字以内で入力してください。");
     const payload = await RoadRideAuth.apiFetch(`/reservations/${encodeURIComponent(reservationId)}/cancel`, {
       method: "POST",
       body: trimmedReason ? { reason: trimmedReason } : {},

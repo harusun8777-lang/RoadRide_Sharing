@@ -1,6 +1,10 @@
 (() => {
   const params       = new URLSearchParams(window.location.search);
   const isDispatcher = params.get("role") === "dispatcher";
+  if (isDispatcher) {
+    window.location.replace("index.html?role=dispatcher&next=dispatch");
+    return;
+  }
   const role         = isDispatcher ? "dispatcher" : "user";
   const roleName     = isDispatcher ? "配車担当者" : "利用者";
   const loginParams  = new URLSearchParams({
@@ -11,7 +15,9 @@
   // 遷移先は固定の候補から選ぶ（任意のURLには転送しない）
   const destination = isDispatcher
     ? "/dispatch/pages/dashboard.html"
-    : "/reservation/pages/reservation.html";
+    : params.get("next") === "history"
+      ? "/reservation/pages/reservation_history.html"
+      : "/reservation/pages/reservation.html";
 
   document.body.dataset.role                        = role;
   document.title                                    = `${roleName}新規登録 | RoadRide Sharing`;
@@ -82,6 +88,13 @@
     form.setAttribute("aria-busy", String(loading));
   }
 
+  form.addEventListener("invalid", (event) => {
+    const field = Object.values(FIELDS).find(item => item.inputEl === event.target);
+    const message = event.target.validationMessage || "入力内容を確認してください。";
+    if (field) setFieldError(field, message);
+    formError.textContent = "入力内容を確認してください。";
+  }, true);
+
   // 入力し直したら、その欄の API エラー表示を消す
   Object.values(FIELDS).forEach((field) => {
     field.inputEl.addEventListener("input", () => {
@@ -134,8 +147,7 @@
         firstName:     FIELDS.first_name.inputEl.value.trim(),
         kanaLastName:  FIELDS.kana_last_name.inputEl.value.trim(),
         kanaFirstName: FIELDS.kana_first_name.inputEl.value.trim(),
-        // バックエンドには配車担当者の区分がないため、配車担当者は driver で登録する
-        role:          isDispatcher ? "driver" : "rider"
+        role:          "rider"
       });
       window.location.assign(destination);
     } catch (error) {

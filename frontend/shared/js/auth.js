@@ -52,7 +52,8 @@ const RoadRideAuth = (() => {
     401: "ログインの有効期限が切れました。もう一度ログインしてください。",
     404: "指定されたデータが見つかりません。",
     409: "現在の状態ではこの操作を行えません。",
-    422: "入力内容を確認してください。"
+    422: "入力内容を確認してください。",
+    429: "操作が集中しています。しばらく待ってから再度お試しください。"
   };
 
   /** API のエラーを画面で扱いやすい形にしたもの */
@@ -93,6 +94,7 @@ const RoadRideAuth = (() => {
   function clearToken() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(EXPIRES_KEY);
+    localStorage.removeItem("roadrideReservationHistory");
   }
 
   // ─────────────────────────────────────────
@@ -114,7 +116,7 @@ const RoadRideAuth = (() => {
 
   function redirectToLogin(role) {
     clearToken();
-    window.location.assign(loginUrl(role));
+    window.location.assign(`${loginUrl(role)}&reason=session-expired`);
   }
 
   /**
@@ -200,6 +202,9 @@ const RoadRideAuth = (() => {
       throw toApiError(response.status, payload, errorMessages[response.status]);
     }
 
+    if (!payload || typeof payload !== "object" || !("data" in payload)) {
+      throw new ApiError("サーバーから正しい応答を受け取れませんでした。時間をおいて再度お試しください。", { status: response.status });
+    }
     return payload;
   }
 
