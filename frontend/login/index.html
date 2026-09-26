@@ -27,11 +27,11 @@
         </div>
         <h1 id="page-title">利用者ログイン</h1>
         <p class="login-description" id="login-description">ログイン後、新規予約へ進みます。</p>
-        <p class="demo-notice" id="demo-notice">現在は仮ログインです。ユーザーIDとパスワードの入力のみ確認します。実際に使用しているパスワードは入力しないでください。</p>
+        <p class="demo-notice" id="demo-notice">現在は仮ログインです。メールアドレスとパスワードの入力のみ確認します。実際に使用しているパスワードは入力しないでください。</p>
         <form id="login-form" aria-describedby="demo-notice">
           <div class="form-field">
-            <label for="user-id">ユーザーID <span class="required">必須</span></label>
-            <input id="user-id" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="ユーザーIDを入力" required>
+            <label for="login-identifier" id="identifier-label">メールアドレス <span class="required">必須</span></label>
+            <input id="login-identifier" type="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" placeholder="example@example.com" required>
           </div>
           <div class="form-field">
             <label for="password">パスワード <span class="required">必須</span></label>

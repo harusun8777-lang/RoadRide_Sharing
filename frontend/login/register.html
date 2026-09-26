@@ -19,9 +19,12 @@
       </div>
     </header>
     <main class="login-main">
-      <a class="back-link" id="login-link" href="index.html?role=user&amp;next=reservation">← ログインに戻る</a>
+      <a class="back-link" href="../top/index.html">←トップに戻る</a>
       <section class="login-panel" aria-labelledby="page-title">
-        <p class="eyebrow" id="role-label">利用者向け</p>
+        <div class="login-heading-row">
+          <p class="eyebrow" id="role-label">利用者向け</p>
+          <p class="registration-link"><a id="login-link" href="index.html?role=user&amp;next=reservation">ログインはこちら</a></p>
+        </div>
         <h1 id="page-title">利用者新規登録</h1>
         <p class="login-description">以下の項目を入力してください。</p>
         <p class="demo-notice" id="demo-notice">現在は仮登録です。入力内容の確認のみ行い、アカウントは作成されません。実際に使用しているパスワードは入力しないでください。</p>
@@ -30,10 +33,32 @@
             <label for="email">メールアドレス <span class="required">必須</span></label>
             <input id="email" type="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" placeholder="example@example.com" required>
           </div>
-          <div class="form-field">
-            <label for="user-id">ユーザーID <span class="required">必須</span></label>
-            <input id="user-id" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="ユーザーIDを入力" required>
-          </div>
+          <fieldset class="name-group">
+            <legend>名前 <span class="required">必須</span></legend>
+            <div class="name-fields">
+            <div class="form-field">
+              <label for="family-name">姓</label>
+              <input id="family-name" type="text" autocomplete="family-name" placeholder="山田" required>
+            </div>
+            <div class="form-field">
+              <label for="given-name">名</label>
+              <input id="given-name" type="text" autocomplete="given-name" placeholder="太郎" required>
+            </div>
+            </div>
+          </fieldset>
+          <fieldset class="name-group">
+            <legend>ヨミガナ <span class="required">必須</span></legend>
+            <div class="name-fields">
+            <div class="form-field">
+              <label for="family-name-kana">姓</label>
+              <input id="family-name-kana" type="text" placeholder="ヤマダ" required>
+            </div>
+            <div class="form-field">
+              <label for="given-name-kana">名</label>
+              <input id="given-name-kana" type="text" placeholder="タロウ" required>
+            </div>
+            </div>
+          </fieldset>
           <div class="form-field">
             <label for="password">パスワード <span class="required">必須</span></label>
             <input id="password" type="password" autocomplete="new-password" required>

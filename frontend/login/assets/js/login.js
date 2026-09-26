@@ -9,11 +9,21 @@
       : { label: "新規予約", path: "../reservation/pages/reservation.html" };
   const roleName = isDispatcher ? "配車担当者" : "利用者";
   const registrationParams = new URLSearchParams({
-    role: isDispatcher ? "dispatcher" : "user",
-    next: isDispatcher ? "dispatch" : params.get("next") === "history" ? "history" : "reservation"
+    role: "user",
+    next: params.get("next") === "history" ? "history" : "reservation"
   });
   document.getElementById("register-link").href = `register.html?${registrationParams}`;
-  document.getElementById("registration-status").hidden = params.get("registration") !== "demo";
+  if (isDispatcher) {
+    document.getElementById("register-link").parentElement.remove();
+    document.getElementById("identifier-label").firstChild.textContent = "ユーザーID ";
+    const identifier = document.getElementById("login-identifier");
+    identifier.type = "text";
+    identifier.inputMode = "text";
+    identifier.placeholder = "ユーザーIDを入力";
+    document.getElementById("demo-notice").textContent =
+      "現在は仮ログインです。ユーザーIDとパスワードの入力のみ確認します。実際に使用しているパスワードは入力しないでください。";
+  }
+  document.getElementById("registration-status").hidden = isDispatcher || params.get("registration") !== "demo";
 
   document.body.dataset.role = isDispatcher ? "dispatcher" : "user";
   document.title = `${roleName}ログイン | RoadRide Sharing`;
@@ -28,7 +38,7 @@
     if (!form.reportValidity()) return;
 
     // API仕様書のMVP方針に合わせた仮ログイン。認証APIの追加時に置き換える。
-    // ユーザーID・パスワードは保存・送信しない。
+    // メールアドレス・ユーザーID・パスワードは保存・送信しない。
     form.reset();
     window.location.assign(destination.path);
   });

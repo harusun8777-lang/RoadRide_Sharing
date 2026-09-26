@@ -1,17 +1,15 @@
 (() => {
   const params = new URLSearchParams(window.location.search);
-  const isDispatcher = params.get("role") === "dispatcher";
-  const role = isDispatcher ? "dispatcher" : "user";
-  const roleName = isDispatcher ? "配車担当者" : "利用者";
+  if (params.get("role") === "dispatcher") {
+    window.location.replace("index.html?role=dispatcher&next=dispatch");
+    return;
+  }
   const loginParams = new URLSearchParams({
-    role,
-    next: isDispatcher ? "dispatch" : params.get("next") === "history" ? "history" : "reservation"
+    role: "user",
+    next: params.get("next") === "history" ? "history" : "reservation"
   });
 
-  document.body.dataset.role = role;
-  document.title = `${roleName}新規登録 | RoadRide Sharing`;
-  document.getElementById("role-label").textContent = `${roleName}向け`;
-  document.getElementById("page-title").textContent = `${roleName}新規登録`;
+  document.body.dataset.role = "user";
   document.getElementById("login-link").href = `index.html?${loginParams}`;
 
   const form = document.getElementById("register-form");
