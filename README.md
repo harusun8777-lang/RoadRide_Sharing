@@ -25,6 +25,7 @@
 │   ├── Program.cs       # DI登録・起動処理
 │   └── Dockerfile
 ├── docs/                # 要件定義・API仕様・データモデル等の設計資料
+├── infra/               # Azure 本番環境の Terraform（手順は infra/README.md）
 ├── docker-compose.yml
 └── .env.example
 ```

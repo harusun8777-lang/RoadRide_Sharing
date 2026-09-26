@@ -1,2 +1,9 @@
 # Environment secrets
 .env
+
+# Terraform
+infra/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+infra/backend.hcl
