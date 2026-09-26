@@ -99,66 +99,15 @@ const RoadRideAuth = (() => {
   // 画面遷移
   // ─────────────────────────────────────────
 
-  /**
-   * POST /api/auth/login
-   * 成功時にトークンを保存して true を返す
-   * 失敗時はエラーをスローする
-   */
-  async function login(email, password) {
-  const response = await fetch(`${API_BASE}/auth/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json"
-    },
-    body: JSON.stringify({ email, password })
-  });
-
-  const payload = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    const message =
-      response.status === 401
-        ? "メールアドレスまたはパスワードが正しくありません。"
-        : payload.error?.message || "ログインに失敗しました。";
-    throw new Error(message);
+  /** 今の画面の利用者種別（body の data-role）。"dispatcher" 以外は "user" */
+  function currentRole() {
+    return document.body?.dataset.role === "dispatcher" ? "dispatcher" : "user";
   }
 
-  const { access_token, expires_at } = payload.data;
-  saveToken(access_token, expires_at);
-  return true;
-}
-
-  /**
-   * POST /api/users
-   * 利用者登録。成功後に自動でログインしてトークンを保存する
-   */
-  async function register({ email, password, lastName, firstName, kanaLastName, kanaFirstName, role = "rider" }) {
-    const response = await fetch(`${API_BASE}/users`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify({
-        email,
-        password,
-        last_name:       lastName,
-        first_name:      firstName,
-        kana_last_name:  kanaLastName,
-        kana_first_name: kanaFirstName,
-        role
-      })
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      const message =
-        response.status === 409
-          ? "このメールアドレスはすでに登録されています。"
-          : payload.error?.message || "登録に失敗しました。";
-      throw new Error(message);
+  function loginUrl(role = currentRole()) {
+    const params = new URLSearchParams({ role: role === "dispatcher" ? "dispatcher" : "user" });
+    if (role !== "dispatcher" && window.location.pathname.includes("reservation_history")) {
+      params.set("next", "history");
     }
     return `${LOGIN_PATH}?${params}`;
   }
@@ -220,16 +169,11 @@ const RoadRideAuth = (() => {
     const headers = { Accept: "application/json" };
     if (body !== undefined) headers["Content-Type"] = "application/json";
 
-    if(!token){
-      throw new Error("authFetch function required token in localstrage");
-    }
-
-    const response = await fetch(`${API_BASE}${path}`, {
-      ...options,
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
+    if (auth) {
+      const token = getToken();
+      if (!token || !isTokenValid()) {
+        redirectToLogin();
+        throw new ApiError(STATUS_MESSAGES[401], { status: 401 });
       }
       headers.Authorization = `Bearer ${token}`;
     }
