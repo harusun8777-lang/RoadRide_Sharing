@@ -24,27 +24,59 @@
       <section class="login-panel" aria-labelledby="page-title">
         <p class="eyebrow" id="role-label">利用者向け</p>
         <h1 id="page-title">利用者新規登録</h1>
-        <p class="login-description">以下の項目を入力してください。</p>
-        <p class="demo-notice" id="demo-notice">現在は仮登録です。入力内容の確認のみ行い、アカウントは作成されません。実際に使用しているパスワードは入力しないでください。</p>
-        <form id="register-form" aria-describedby="demo-notice">
+        <p class="login-description">以下の項目を入力してください。登録が完了すると、そのままログインします。</p>
+        <form id="register-form">
           <div class="form-field">
             <label for="email">メールアドレス <span class="required">必須</span></label>
-            <input id="email" type="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" placeholder="example@example.com" required>
+            <input id="email" name="email" type="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" maxlength="254" placeholder="example@example.com" required>
+            <p id="email-error" class="field-error" aria-live="polite"></p>
           </div>
-          <div class="form-field">
-            <label for="user-id">ユーザーID <span class="required">必須</span></label>
-            <input id="user-id" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="ユーザーIDを入力" required>
-          </div>
+
+          <fieldset class="form-fieldset">
+            <legend>お名前 <span class="required">必須</span></legend>
+            <div class="form-row">
+              <div class="form-field">
+                <label for="last-name">姓</label>
+                <input id="last-name" name="last_name" type="text" autocomplete="family-name" maxlength="50" placeholder="山田" required>
+                <p id="last-name-error" class="field-error" aria-live="polite"></p>
+              </div>
+              <div class="form-field">
+                <label for="first-name">名</label>
+                <input id="first-name" name="first_name" type="text" autocomplete="given-name" maxlength="50" placeholder="太郎" required>
+                <p id="first-name-error" class="field-error" aria-live="polite"></p>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="form-fieldset">
+            <legend>フリガナ（全角カタカナ） <span class="required">必須</span></legend>
+            <div class="form-row">
+              <div class="form-field">
+                <label for="kana-last-name">セイ</label>
+                <input id="kana-last-name" name="kana_last_name" type="text" autocomplete="off" maxlength="50" pattern="^[ァ-ヶー]+$" title="全角カタカナで入力してください（例：ヤマダ）" placeholder="ヤマダ" required>
+                <p id="kana-last-name-error" class="field-error" aria-live="polite"></p>
+              </div>
+              <div class="form-field">
+                <label for="kana-first-name">メイ</label>
+                <input id="kana-first-name" name="kana_first_name" type="text" autocomplete="off" maxlength="50" pattern="^[ァ-ヶー]+$" title="全角カタカナで入力してください（例：タロウ）" placeholder="タロウ" required>
+                <p id="kana-first-name-error" class="field-error" aria-live="polite"></p>
+              </div>
+            </div>
+          </fieldset>
+
           <div class="form-field">
             <label for="password">パスワード <span class="required">必須</span></label>
-            <input id="password" type="password" autocomplete="new-password" required>
+            <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" aria-describedby="password-hint" required>
+            <p id="password-hint" class="field-hint">8〜128文字で入力してください。</p>
+            <p id="password-field-error" class="field-error" aria-live="polite"></p>
           </div>
           <div class="form-field">
             <label for="password-confirm">パスワード（確認用） <span class="required">必須</span></label>
-            <input id="password-confirm" type="password" autocomplete="new-password" aria-describedby="password-error" placeholder="もう一度パスワードを入力" required>
-            <p id="password-error" class="password-error" aria-live="polite"></p>
+            <input id="password-confirm" type="password" autocomplete="new-password" minlength="8" maxlength="128" aria-describedby="password-error" placeholder="もう一度パスワードを入力" required>
+            <p id="password-error" class="field-error" aria-live="polite"></p>
           </div>
-          <button class="login-button" type="submit">新規登録（仮登録）</button>
+          <p id="register-error" class="form-error" role="alert" aria-live="assertive"></p>
+          <button class="login-button" type="submit">新規登録</button>
         </form>
         <noscript><p>新規登録するにはブラウザのJavaScriptを有効にしてください。</p></noscript>
       </section>
