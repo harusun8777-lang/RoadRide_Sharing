@@ -100,11 +100,10 @@ docker compose up --build
 
 ## 設計資料
 
-- [要件定義書](docs/requirements.md)
-- [API仕様書](docs/api-specification.md)
-- [エンドポイント一覧（実装済み）](docs/ENDPOINT.md) / [OpenAPI 定義（Swagger）](docs/swagger.yaml)
-- [データモデル](docs/data-model.md)
-- [画面遷移](docs/screen-transition.md)
-- [UIデザインガイドライン](docs/ui-design-guidelines.md)
-- [ペルソナ](docs/personas.md)
-- [1週間MVP計画](docs/one-week-mvp-plan.md)
+- [要件定義書](docs/REQUIREMENTS.md)
+- [API エンドポイント一覧](docs/ENDPOINT.md) / [OpenAPI 定義（Swagger）](docs/SWAGGER.yaml)
+- [データモデル](docs/DATA_MODEL.md)
+- [画面遷移](docs/SCREEN_TRANSITION.md)
+- [UIデザインガイドライン](docs/UI_DESIGN_GUIDELINES.md)
+- [ペルソナ](docs/PERSONAS.md)
+- [1週間MVP計画](docs/ONE_WEEK_MVP_PLAN.md)

@@ -1,10 +1,9 @@
 # エンドポイント一覧（実装済み）
 
 現在のバックエンドに**実装されている** API のリクエスト・レスポンスをまとめたドキュメントです。
-今後の予定も含めた設計は [API仕様書](api-specification.md) を参照してください。
-OpenAPI（Swagger）形式の定義は [swagger.yaml](swagger.yaml) にあります。
+OpenAPI（Swagger）形式の定義は [SWAGGER.yaml](SWAGGER.yaml) にあります。
 
-> コード（`backend/handler/`）を変更したら、このファイルと `swagger.yaml` も更新してください。
+> コード（`backend/handler/`）を変更したら、このファイルと `SWAGGER.yaml` も更新してください。
 
 ## 目次
 
