@@ -62,6 +62,37 @@
   word-break: break-word;
 }
 
+.reason-field {
+  display: grid;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.reason-field label {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.reason-field textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
+  background: white;
+  resize: vertical;
+}
+
+.reason-field textarea:focus {
+  border-color: var(--blue);
+  outline: 3px solid #bfdbfe;
+}
+
+.reason-field textarea:disabled {
+  background: #f8fafc;
+}
+
 .button-area {
   display: flex;
   justify-content: flex-end;

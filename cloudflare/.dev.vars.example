@@ -1,0 +1,2 @@
+# ローカルで wrangler dev するときの接続先（docker compose で起動したバックエンド）
+BACKEND_ORIGIN=http://localhost:8080

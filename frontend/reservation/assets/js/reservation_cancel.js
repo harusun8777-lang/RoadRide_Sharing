@@ -1,88 +1,72 @@
-const params = new URLSearchParams(window.location.search);
-let reservation = RoadRideReservationApi.fromParams(params);
+// 予約キャンセル画面。予約を GET で取得して表示し、POST /api/reservations/{id}/cancel でキャンセルする
+(() => {
+  if (!RoadRideAuth.requireAuth()) return;
 
-function formatDisplayDate(value) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return value || "---";
+  const Api = RoadRideReservationApi;
+  const reservationId = Api.reservationIdFromUrl();
+  const pageError = document.querySelector("#page-error");
+  const loading = document.querySelector("#page-loading");
+  const confirmButton = document.querySelector("#confirm-cancel-button");
+  const reasonInput = document.querySelector("#cancel-reason");
+
+  function renderReservation(reservation) {
+    document.querySelector("#reservation-number").textContent = reservation.reservation_number || "---";
+    document.querySelector("#ride-datetime").textContent = Api.formatDateTime(reservation.requested_pickup_at);
+    document.querySelector("#pickup").textContent = reservation.pickup_location || "---";
+    document.querySelector("#destination").textContent = reservation.destination || "---";
+    document.querySelector("#passengers").textContent =
+      reservation.passenger_count ? `${reservation.passenger_count}人` : "---";
+    document.querySelector("#status").textContent = Api.statusLabel(reservation.status);
+
+    if (!Api.isCancellable(reservation)) {
+      Api.showMessage(
+        pageError,
+        `この予約は「${Api.statusLabel(reservation.status)}」のため、キャンセルできません。`
+      );
+      confirmButton.disabled = true;
+      reasonInput.disabled = true;
+    } else {
+      confirmButton.disabled = false;
+    }
   }
 
-  return value.replaceAll("-", "/");
-}
+  async function initialize() {
+    confirmButton.disabled = true;
+    document.querySelector("#back-button").href = Api.pageUrl("reservation_detail.html", reservationId);
 
-function formatDatetime(date, hour, minute) {
-  if (!date) {
-    return "---";
+    if (!reservationId) {
+      Api.showMessage(pageError, "予約が指定されていません。予約履歴から予約を選んでください。");
+      return;
+    }
+
+    Api.showMessage(loading, "予約内容を読み込み中です…");
+    try {
+      renderReservation(await Api.getReservation(reservationId));
+    } catch (error) {
+      Api.showMessage(pageError, Api.errorMessage(error));
+    } finally {
+      Api.showMessage(loading, "");
+    }
   }
 
-  const time = hour && minute ? ` ${hour}:${minute}` : "";
+  confirmButton.addEventListener("click", async () => {
+    const defaultLabel = confirmButton.textContent;
 
-  return `${formatDisplayDate(date)}${time}`;
-}
-
-function buildPageUrl(pageName, nextReservation = reservation) {
-  const nextParams = RoadRideReservationApi.toParams(nextReservation);
-  const query = nextParams.toString();
-
-  return query ? `${pageName}?${query}` : pageName;
-}
-
-function renderReservation(nextReservation) {
-  reservation = nextReservation;
-
-  document.querySelector("#reservation-number").textContent =
-    reservation.reservationNumber || "---";
-  document.querySelector("#ride-datetime").textContent = formatDatetime(
-    reservation.date,
-    reservation.hour,
-    reservation.minute
-  );
-  document.querySelector("#pickup").textContent = reservation.pickup || "---";
-  document.querySelector("#destination").textContent =
-    reservation.destination || "---";
-  document.querySelector("#passengers").textContent =
-    reservation.passengers ? `${reservation.passengers}人` : "---";
-
-  document.querySelector("#back-button").href =
-    buildPageUrl("reservation_detail.html", reservation);
-}
-
-async function initializeCancelPage() {
-  document.querySelector("#confirm-cancel-button").disabled = true;
-
-  const fetchedReservation = await RoadRideReservationApi.getReservation(
-    reservation.reservationId
-  );
-
-  renderReservation(fetchedReservation);
-  const canCancel = ["matching", "confirmed"].includes(fetchedReservation.status);
-  document.querySelector("#confirm-cancel-button").disabled = !canCancel;
-  if (!canCancel) throw new Error("この予約は現在の状態ではキャンセルできません。");
-}
-
-document
-  .querySelector("#confirm-cancel-button")
-  .addEventListener("click", async () => {
-    const button = document.querySelector("#confirm-cancel-button");
-
-    button.disabled = true;
-    button.textContent = "キャンセル中...";
+    confirmButton.disabled = true;
+    confirmButton.textContent = "キャンセル中...";
+    Api.showMessage(pageError, "");
 
     try {
-      const cancelledReservation = await RoadRideReservationApi.cancelReservation(
-        reservation,
-        "利用者画面からキャンセル"
-      );
-      const nextParams = RoadRideReservationApi.toParams(cancelledReservation);
-
-      window.location.href = `reservation_cancel_complete.html?${nextParams.toString()}`;
+      await Api.cancelReservation(reservationId, reasonInput.value);
+      window.location.href = Api.pageUrl("reservation_cancel_complete.html", reservationId);
     } catch (error) {
-      RoadRideReservationApi.showError(error);
-      button.disabled = false;
-      button.textContent = "キャンセルする";
+      Api.showMessage(pageError, Api.errorMessage(error));
+      confirmButton.textContent = defaultLabel;
+      // 409（キャンセルできない状態）と 404 はやり直しても成功しないため、ボタンを押せないままにする
+      const retryable = !(error instanceof RoadRideAuth.ApiError) || ![404, 409].includes(error.status);
+      confirmButton.disabled = !retryable;
     }
   });
 
-initializeCancelPage().catch(error => {
-  document.querySelector("#confirm-cancel-button").disabled = true;
-  RoadRideReservationApi.showError(error);
-});
+  initialize();
+})();

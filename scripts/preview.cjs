@@ -1,5 +1,5 @@
 // Run from any directory: node scripts/preview.cjs
-// Frontend: http://localhost:3000/frontend/login/index.html
+// Frontend: http://localhost:3000/login/index.html
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -19,16 +19,17 @@ const server = http.createServer((req, res) => {
     return;
   }
   if (req.url === '/') {
-    res.writeHead(302, { Location: '/frontend/login/index.html' });
+    res.writeHead(302, { Location: '/login/index.html' });
     res.end();
     return;
   }
   let pathname;
   try { pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname); }
   catch { res.writeHead(400); res.end(); return; }
-  const file = path.resolve(root, pathname.slice('/frontend/'.length));
+  const relativeUrl = pathname.startsWith('/frontend/') ? pathname.slice('/frontend/'.length) : pathname.slice(1);
+  const file = path.resolve(root, relativeUrl);
   const relative = path.relative(root, file);
-  if (!pathname.startsWith('/frontend/') || relative.startsWith('..') || path.isAbsolute(relative) || pathname.includes('\0')) {
+  if (relative.startsWith('..') || path.isAbsolute(relative) || pathname.includes('\0')) {
     res.writeHead(404); res.end(); return;
   }
   fs.readFile(file, (error, data) => {
@@ -37,4 +38,4 @@ const server = http.createServer((req, res) => {
     res.end(data);
   });
 });
-server.listen(3000, '127.0.0.1', () => console.log('Open http://localhost:3000/frontend/login/index.html (Ctrl+C to stop)'));
+server.listen(3000, '127.0.0.1', () => console.log('Open http://localhost:3000/login/index.html (Ctrl+C to stop)'));

@@ -277,6 +277,33 @@ tbody tr.reservation-row:focus {
   font-size: 14px;
 }
 
+.table-message {
+  padding: 40px 12px;
+  color: var(--muted);
+  text-align: center;
+  max-width: none;
+}
+
+tbody tr:has(.table-message):hover {
+  background: transparent;
+  filter: none;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.pagination .secondary {
+  min-height: 40px;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -521,5 +548,20 @@ tbody tr.reservation-row:focus {
     min-height: 52px;
     font-size: 15px;
     border-radius: 12px;
+  }
+}
+
+@media (max-width: 767px) {
+  td.table-message {
+    display: block;
+    padding: 24px 0;
+  }
+
+  td.table-message::before {
+    content: none;
+  }
+
+  .pagination {
+    gap: 10px;
   }
 }

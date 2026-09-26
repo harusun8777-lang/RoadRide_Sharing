@@ -1,191 +1,259 @@
-const params = new URLSearchParams(window.location.search);
-const statusLabels = {
-  in_progress: "乗車中",
-  matching: "マッチング中",
-  confirmed: "予約確定",
-  cancelled: "キャンセル済み",
-  completed: "乗車完了"
-};
-const statusClasses = {
-  matching: "status-info",
-  confirmed: "status-success",
-  completed: "status-success",
-  cancelled: "status-danger"
-};
-const state = {
-  query: "",
-  date: "all",
-  status: "all"
-};
+// 予約履歴画面。GET /api/reservations で一覧を取得する
+// - 乗車日・状態の絞り込みとページ送りは API のクエリ（date / status / page / limit）で行う
+// - キーワード検索は API にないため、表示中のページの中だけで絞り込む
+(() => {
+  if (!RoadRideAuth.requireAuth()) return;
 
-function formatDisplayDate(value) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return value || "---";
-  }
+  const Api = RoadRideReservationApi;
+  const PAGE_SIZE = 20;
 
-  return value.replaceAll("-", "/");
-}
+  const state = {
+    query: "",
+    date: "",
+    status: "",
+    page: 1,
+    reservations: [],
+    total: 0
+  };
+  let requestSequence = 0;
 
-function formatScheduleDatetime(reservation) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(reservation.date)) {
-    return "---";
-  }
-
-  const [, month, day] = reservation.date.split("-");
-  const hour = reservation.hour || "--";
-  const minute = reservation.minute || "--";
-
-  return `${Number(month)}月${Number(day)}日 ${hour}:${minute}`;
-}
-
-function buildDetailUrl(reservation) {
-const detailParams = (typeof RoadRideReservationApi !== 'undefined' && RoadRideReservationApi.toParams)
-  ? RoadRideReservationApi.toParams(reservation)
-  : (() => {
-      const detailParams = new URLSearchParams();
-
-      [
-        "reservationNumber",
-        "pickup",
-        "destination",
-        "date",
-        "hour",
-        "minute",
-        "passengers",
-        "care",
-        "notes",
-        "status",
-        "vehicle",
-        "fare",
-        "duration",
-        "riderOrder"
-      ].forEach((key) => {
-        if (reservation[key]) {
-          detailParams.set(key, reservation[key]);
-        }
-      });
-
-      return detailParams;
-    })();
-  const query = detailParams.toString();
-  const pageName = reservation.status === "cancelled"
-    ? "reservation_cancel_complete.html"
-    : "reservation_detail.html";
-
-  return query ? `${pageName}?${query}` : pageName;
-}
-
-function getFilteredReservations(history) {
-  return history.filter((reservation) => {
-    const searchableText = [
-      reservation.reservationNumber,
-      reservation.pickup,
-      reservation.destination
-    ].join(" ").toLowerCase();
-    const matchesQuery = searchableText.includes(state.query.toLowerCase());
-    const matchesDate = state.date === "all" || reservation.date === state.date;
-    const matchesStatus =
-      state.status === "all" || reservation.status === state.status;
-
-    return matchesQuery && matchesDate && matchesStatus;
-  });
-}
-
-function renderSummary(history) {
-  const countByStatus = (status) =>
-    history.filter((reservation) => reservation.status === status).length;
-
-  document.querySelector("#total-count").textContent = history.length;
-  document.querySelector("#matching-count").textContent =
-    countByStatus("matching");
-  document.querySelector("#confirmed-count").textContent =
-    countByStatus("confirmed");
-  document.querySelector("#cancelled-count").textContent =
-    countByStatus("cancelled");
-}
-
-function renderStatus(status) {
-  const currentStatus = status || "matching";
-
-  return `<span class="status ${statusClasses[currentStatus] || "status-info"}">${statusLabels[currentStatus] || statusLabels.matching}</span>`;
-}
-
-function renderTable(history) {
   const tableBody = document.querySelector("#reservation-table-body");
   const emptyState = document.querySelector("#empty-state");
-  const resultCount = document.querySelector("#result-count");
-  const filteredReservations = getFilteredReservations(history);
+  const emptyTitle = document.querySelector("#empty-title");
+  const emptyText = document.querySelector("#empty-text");
+  const resultSummary = document.querySelector("#result-summary");
+  const pageError = document.querySelector("#page-error");
+  const pagination = document.querySelector("#pagination");
+  const prevButton = document.querySelector("#prev-page");
+  const nextButton = document.querySelector("#next-page");
+  const pageInfo = document.querySelector("#page-info");
+  const searchInput = document.querySelector("#search-input");
+  const dateFilter = document.querySelector("#date-filter");
+  const statusFilter = document.querySelector("#status-filter");
 
-  resultCount.textContent = filteredReservations.length;
-  tableBody.innerHTML = filteredReservations.map((reservation) => `
-    <tr class="reservation-row" data-detail-url="${buildDetailUrl(reservation)}" tabindex="0">
-      <td data-label="乗車予定">
-        <span class="reservation-time">${formatScheduleDatetime(reservation)}</span>
-      </td>
-      <td data-label="乗車場所">${RoadRideReservationApi.escapeHtml(reservation.pickup || "---")}</td>
-      <td data-label="目的地">${RoadRideReservationApi.escapeHtml(reservation.destination || "---")}</td>
-      <td data-label="人数">${reservation.passengers ? `${reservation.passengers}人` : "---"}</td>
-      <td data-label="状態">${renderStatus(reservation.status)}</td>
-    </tr>
-  `).join("");
+  // ─────────────────────────────────────────
+  // 件数（meta.total を使う）
+  // ─────────────────────────────────────────
 
-  emptyState.hidden = filteredReservations.length > 0;
+  async function loadSummary() {
+    const targets = [
+      ["#total-count", ""],
+      ["#matching-count", "matching"],
+      ["#confirmed-count", "confirmed"],
+      ["#cancelled-count", "cancelled"]
+    ];
 
-  tableBody.querySelectorAll(".reservation-row").forEach((row) => {
-    const openDetail = () => {
-      window.location.href = row.dataset.detailUrl;
-    };
-
-    row.addEventListener("click", (event) => {
-      if (event.target.closest("a")) {
-        return;
+    await Promise.all(targets.map(async ([selector, status]) => {
+      const element = document.querySelector(selector);
+      element.textContent = "…";
+      try {
+        const { meta } = await Api.listReservations({ status, page: 1, limit: 1 });
+        element.textContent = meta.total;
+      } catch {
+        // 一覧の取得エラーと同じ原因のことが多いので、メッセージは一覧側で表示する
+        element.textContent = "-";
       }
+    }));
+  }
 
-      openDetail();
-    });
+  // ─────────────────────────────────────────
+  // 一覧
+  // ─────────────────────────────────────────
+
+  function matchesQuery(reservation) {
+    if (!state.query) return true;
+
+    const searchableText = [
+      reservation.reservation_number,
+      reservation.pickup_location,
+      reservation.destination
+    ].join(" ").toLowerCase();
+
+    return searchableText.includes(state.query.toLowerCase());
+  }
+
+  function createCell(label, content) {
+    const cell = document.createElement("td");
+    cell.dataset.label = label;
+    if (content instanceof Node) {
+      cell.append(content);
+    } else {
+      cell.textContent = content;
+    }
+    return cell;
+  }
+
+  function createStatusBadge(status) {
+    const badge = document.createElement("span");
+    badge.className = `status status-${Api.statusTone(status)}`;
+    badge.textContent = Api.statusLabel(status);
+    return badge;
+  }
+
+  function createRow(reservation) {
+    const row = document.createElement("tr");
+    const detailUrl = Api.pageUrl("reservation_detail.html", reservation.id);
+    const time = document.createElement("span");
+
+    row.className = "reservation-row";
+    row.tabIndex = 0;
+    time.className = "reservation-time";
+    time.textContent = Api.formatShortDateTime(reservation.requested_pickup_at);
+
+    row.append(
+      createCell("乗車予定", time),
+      createCell("乗車場所", reservation.pickup_location || "---"),
+      createCell("目的地", reservation.destination || "---"),
+      createCell("人数", reservation.passenger_count ? `${reservation.passenger_count}人` : "---"),
+      createCell("状態", createStatusBadge(reservation.status))
+    );
+
+    const openDetail = () => {
+      window.location.href = detailUrl;
+    };
+    row.addEventListener("click", openDetail);
     row.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         openDetail();
       }
     });
-  });
-}
 
-function resetFilters(history) {
-  state.query = "";
-  state.date = "all";
-  state.status = "all";
-  document.querySelector("#search-input").value = "";
-  document.querySelector("#date-filter").value = "";
-  document.querySelector("#status-filter").value = "all";
-  renderTable(history);
-}
+    return row;
+  }
 
-async function initializeHistoryPage() {
-  const history = await RoadRideReservationApi.listReservations();
+  function hasFilters() {
+    return Boolean(state.query || state.date || state.status);
+  }
 
-  renderSummary(history);
-  renderTable(history);
+  function renderTable() {
+    const shown = state.reservations.filter(matchesQuery);
 
-  document.querySelector("#search-input").addEventListener("input", (event) => {
+    tableBody.replaceChildren(...shown.map(createRow));
+
+    const start = state.total === 0 ? 0 : (state.page - 1) * PAGE_SIZE + 1;
+    const end = (state.page - 1) * PAGE_SIZE + state.reservations.length;
+    let summaryText = state.total === 0
+      ? "0件"
+      : `全${state.total}件中 ${start}〜${end}件目を表示中`;
+    if (state.query) {
+      summaryText += `（このページで「${state.query}」に一致：${shown.length}件）`;
+    }
+    resultSummary.textContent = summaryText;
+
+    emptyState.hidden = shown.length > 0;
+    if (!hasFilters()) {
+      emptyTitle.textContent = "まだ予約がありません";
+      emptyText.textContent = "新しく予約すると、ここに表示されます。";
+    } else {
+      emptyTitle.textContent = "該当する予約がありません";
+      emptyText.textContent = "検索条件を変更して、もう一度お試しください。";
+    }
+
+    const totalPages = Math.max(1, Math.ceil(state.total / PAGE_SIZE));
+    pagination.hidden = totalPages <= 1;
+    pageInfo.textContent = `${state.page} / ${totalPages} ページ`;
+    prevButton.disabled = state.page <= 1;
+    nextButton.disabled = state.page >= totalPages;
+  }
+
+  function renderLoading() {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 5;
+    cell.className = "table-message";
+    cell.textContent = "予約を読み込み中です…";
+    row.append(cell);
+    tableBody.replaceChildren(row);
+    emptyState.hidden = true;
+    resultSummary.textContent = "読み込み中…";
+  }
+
+  async function loadList() {
+    const sequence = ++requestSequence;
+
+    Api.showMessage(pageError, "");
+    renderLoading();
+
+    try {
+      const { data, meta } = await Api.listReservations({
+        status: state.status,
+        date: state.date,
+        page: state.page,
+        limit: PAGE_SIZE
+      });
+      if (sequence !== requestSequence) return;
+
+      state.reservations = data;
+      state.total = Number(meta.total) || 0;
+
+      // 件数が減って今のページが範囲外になったら最後のページを取り直す
+      const totalPages = Math.max(1, Math.ceil(state.total / PAGE_SIZE));
+      if (state.page > totalPages) {
+        state.page = totalPages;
+        loadList();
+        return;
+      }
+
+      renderTable();
+    } catch (error) {
+      if (sequence !== requestSequence) return;
+
+      state.reservations = [];
+      state.total = 0;
+      tableBody.replaceChildren();
+      emptyState.hidden = true;
+      pagination.hidden = true;
+      resultSummary.textContent = "予約を取得できませんでした";
+      Api.showMessage(pageError, `${Api.errorMessage(error)}（↻ ボタンで再読み込みできます）`);
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // 操作
+  // ─────────────────────────────────────────
+
+  searchInput.addEventListener("input", (event) => {
     state.query = event.target.value.trim();
-    renderTable(history);
+    renderTable();
   });
 
-  document.querySelector("#date-filter").addEventListener("change", (event) => {
-    state.date = event.target.value || "all";
-    renderTable(history);
+  dateFilter.addEventListener("change", (event) => {
+    state.date = event.target.value || "";
+    state.page = 1;
+    loadList();
   });
 
-  document.querySelector("#status-filter").addEventListener("change", (event) => {
-    state.status = event.target.value;
-    renderTable(history);
+  statusFilter.addEventListener("change", (event) => {
+    state.status = event.target.value === "all" ? "" : event.target.value;
+    state.page = 1;
+    loadList();
   });
 
+  prevButton.addEventListener("click", () => {
+    if (state.page <= 1) return;
+    state.page -= 1;
+    loadList();
+  });
+
+  nextButton.addEventListener("click", () => {
+    state.page += 1;
+    loadList();
+  });
+
+  // 絞り込みを初期状態に戻して、件数と一覧を取り直す
   document.querySelector("#refresh-button").addEventListener("click", () => {
-    resetFilters(history);
+    state.query = "";
+    state.date = "";
+    state.status = "";
+    state.page = 1;
+    searchInput.value = "";
+    dateFilter.value = "";
+    statusFilter.value = "all";
+    loadSummary();
+    loadList();
   });
-}
 
-initializeHistoryPage().catch(RoadRideReservationApi.showError);
+  loadSummary();
+  loadList();
+})();

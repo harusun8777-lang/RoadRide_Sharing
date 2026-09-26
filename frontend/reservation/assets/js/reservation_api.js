@@ -1,5 +1,13 @@
+/**
+ * reservation_api.js - 予約 API（/api/reservations 系）の呼び出しと、予約画面で共通の表示処理
+ *
+ * - API の呼び出しは RoadRideAuth.apiFetch に任せる（認証ヘッダー、401 時のログイン画面への移動、
+ *   エラーの日本語化）。失敗時は RoadRideAuth.ApiError がそのまま投げられる
+ * - 予約データは API のレスポンス（スネークケース）をそのまま扱う
+ * - API の日時は UTC で返るため、表示するときは日本時間（Asia/Tokyo）に変換する
+ */
 const RoadRideReservationApi = (() => {
-  const apiBase = "/api";
+  const TIME_ZONE = "Asia/Tokyo";
 
   const careLabels = {
     wheelchair: "車いす",
@@ -7,210 +15,290 @@ const RoadRideReservationApi = (() => {
     other: "その他"
   };
 
-  async function fetchJson(path, options = {}) {
-    // RoadRideAuth が読み込まれていればトークンを付与する
-    const token = (typeof RoadRideAuth !== "undefined") ? RoadRideAuth.getToken() : null;
+  // docs/ENDPOINT.md の予約状態（status）
+  const statusLabels = {
+    matching: "マッチング中",
+    confirmed: "予約確定",
+    in_progress: "乗車中",
+    completed: "乗車完了",
+    cancelled: "キャンセル済み"
+  };
 
-    const response = await fetch(`${apiBase}${path}`, {
-      ...options,
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...options.headers
-      }
+  // 表示の色分け（info / success / danger）
+  const statusTones = {
+    matching: "info",
+    confirmed: "success",
+    in_progress: "info",
+    completed: "success",
+    cancelled: "danger"
+  };
+
+  // API でキャンセルできる状態
+  const cancellableStatuses = ["matching", "confirmed"];
+
+  // ─────────────────────────────────────────
+  // 日時（日本時間）
+  // ─────────────────────────────────────────
+
+  const tokyoFormatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23"
+  });
+
+  /**
+   * 日時を日本時間の年・月・日・時・分に分ける。解釈できなければ null
+   * @param {string|Date} value API の日時（末尾 Z またはオフセット付き）か Date
+   */
+  function toTokyoParts(value) {
+    if (!value) return null;
+
+    let date = value;
+    if (!(value instanceof Date)) {
+      // タイムゾーンの指定がない文字列は UTC として扱う（API の日時は UTC のため）
+      const text = String(value);
+      const hasZone = /(?:[zZ]|[+-]\d{2}:?\d{2})$/.test(text);
+      date = new Date(hasZone || !text.includes("T") ? text : `${text}Z`);
+    }
+    if (Number.isNaN(date.getTime())) return null;
+
+    const parts = {};
+    tokyoFormatter.formatToParts(date).forEach(({ type, value: part }) => {
+      parts[type] = part;
     });
+    const hour = parts.hour === "24" ? "00" : parts.hour;
 
-    const payload = await response.json().catch(() => ({}));
-
-    // 401 の場合はトークンを削除してログイン画面へ戻す
-    if (response.status === 401) {
-      if (typeof RoadRideAuth !== "undefined") {
-        RoadRideAuth.clearToken();
-        window.location.assign("/frontend/login/index.html?role=user");
-      }
-      throw new Error("ログインの有効期限が切れました。再ログインしてください。");
-    }
-
-    if (!response.ok) {
-      const message =
-        payload.error?.message || "APIリクエストの処理に失敗しました。";
-      throw new Error(message);
-    }
-
-    return payload;
+    return {
+      year: parts.year,
+      month: parts.month,
+      day: parts.day,
+      hour,
+      minute: parts.minute,
+      date: `${parts.year}-${parts.month}-${parts.day}`
+    };
   }
 
+  /** "2026/10/01" */
+  function formatDate(value) {
+    const parts = toTokyoParts(value);
+    return parts ? `${parts.year}/${parts.month}/${parts.day}` : "---";
+  }
+
+  /** "09:00" */
+  function formatTime(value) {
+    const parts = toTokyoParts(value);
+    return parts ? `${parts.hour}:${parts.minute}` : "---";
+  }
+
+  /** "2026/10/01 09:00" */
+  function formatDateTime(value) {
+    const parts = toTokyoParts(value);
+    return parts ? `${parts.year}/${parts.month}/${parts.day} ${parts.hour}:${parts.minute}` : "---";
+  }
+
+  /** "10月1日 09:00" */
+  function formatShortDateTime(value) {
+    const parts = toTokyoParts(value);
+    return parts ? `${Number(parts.month)}月${Number(parts.day)}日 ${parts.hour}:${parts.minute}` : "---";
+  }
+
+  /** 日本時間の今日から days 日後の日付（YYYY-MM-DD） */
+  function tokyoDateAfter(days = 0) {
+    return toTokyoParts(new Date(Date.now() + days * 24 * 60 * 60 * 1000)).date;
+  }
+
+  /** 入力値（日本時間の日付・時・分）を API に送る形式にする */
   function buildRequestedPickupAt({ date, hour, minute }) {
     return `${date}T${hour}:${minute}:00+09:00`;
   }
 
-  function splitRequestedPickupAt(value) {
-    if (!value) {
-      return { date: "", hour: "", minute: "" };
-    }
+  // ─────────────────────────────────────────
+  // 表示用の値
+  // ─────────────────────────────────────────
 
-    const instant = new Date(value);
-    if (Number.isNaN(instant.getTime())) {
-      return { date: "", hour: "", minute: "" };
-    }
-    const jst = new Date(instant.getTime() + 9 * 60 * 60 * 1000).toISOString();
-    return { date: jst.slice(0, 10), hour: jst.slice(11, 13), minute: jst.slice(14, 16) };
+  function statusLabel(status) {
+    return statusLabels[status] || status || "---";
+  }
+
+  function statusTone(status) {
+    return statusTones[status] || "info";
+  }
+
+  function isCancellable(reservation) {
+    return cancellableStatuses.includes(reservation?.status);
+  }
+
+  function careLabel(care) {
+    return careLabels[care] || "";
   }
 
   function buildConsiderationNotes(formValue) {
-    const care = careLabels[formValue.care] || "";
-
-    return [care, formValue.notes].filter(Boolean).join(" / ");
+    return [careLabel(formValue.care), (formValue.notes || "").trim()].filter(Boolean).join(" / ");
   }
 
-  function toUiReservation(apiReservation) {
-    const schedule = splitRequestedPickupAt(apiReservation.requested_pickup_at);
+  // ─────────────────────────────────────────
+  // 画面間で入力値を渡す URL パラメーター（予約登録の入力 → 確認）
+  // ─────────────────────────────────────────
 
-    return {
-      reservationId: apiReservation.id || "",
-      reservationNumber: apiReservation.reservation_number || "",
-      pickup: apiReservation.pickup_location || "",
-      destination: apiReservation.destination || "",
-      date: schedule.date,
-      hour: schedule.hour,
-      minute: schedule.minute,
-      passengers: String(apiReservation.passenger_count || ""),
-      care: "",
-      notes: apiReservation.consideration_notes || "",
-      status: apiReservation.status || "matching",
-      savedAt: apiReservation.created_at || new Date().toISOString()
-    };
-  }
+  const formKeys = ["pickup", "destination", "date", "hour", "minute", "passengers", "care", "notes"];
 
-  function fromParams(params) {
-    return {
-      reservationId: params.get("reservationId") || "",
-      reservationNumber: params.get("reservationNumber") || "",
-      pickup: params.get("pickup") || "",
-      destination: params.get("destination") || "",
-      date: params.get("date") || "",
-      hour: params.get("hour") || "",
-      minute: params.get("minute") || "",
-      passengers: params.get("passengers") || "",
-      care: params.get("care") || "",
-      notes: params.get("notes") || "",
-      status: params.get("status") || "matching"
-    };
-  }
-
-  function toParams(reservation) {
-    const params = new URLSearchParams();
-
-    [
-      "reservationId",
-      "reservationNumber",
-      "pickup",
-      "destination",
-      "date",
-      "hour",
-      "minute",
-      "passengers",
-      "care",
-      "notes",
-      "status"
-    ].forEach((key) => {
-      if (reservation[key]) {
-        params.set(key, reservation[key]);
-      }
+  function formFromParams(params) {
+    const formValue = {};
+    formKeys.forEach((key) => {
+      formValue[key] = params.get(key) || "";
     });
+    return formValue;
+  }
 
+  function formToParams(formValue) {
+    const params = new URLSearchParams();
+    formKeys.forEach((key) => {
+      if (formValue[key]) params.set(key, formValue[key]);
+    });
     return params;
   }
 
+  /** URL の ?id= から予約IDを取り出す */
+  function reservationIdFromUrl() {
+    return new URLSearchParams(window.location.search).get("id") || "";
+  }
+
+  function pageUrl(pageName, reservationId) {
+    return reservationId ? `${pageName}?id=${encodeURIComponent(reservationId)}` : pageName;
+  }
+
+  // ─────────────────────────────────────────
+  // API
+  // ─────────────────────────────────────────
+
+  /**
+   * POST /api/reservations。登録した予約（API の Reservation）を返す
+   * @param {{pickup: string, destination: string, date: string, hour: string, minute: string,
+   *          passengers: string, care?: string, notes?: string}} formValue
+   */
   async function createReservation(formValue) {
-    const payload = {
-      pickup_location: formValue.pickup,
-      destination: formValue.destination,
+    const body = {
+      pickup_location: formValue.pickup.trim(),
+      destination: formValue.destination.trim(),
       requested_pickup_at: buildRequestedPickupAt(formValue),
-      passenger_count: Number(formValue.passengers),
-      consideration_notes: buildConsiderationNotes(formValue)
+      passenger_count: Number(formValue.passengers)
     };
+    const notes = buildConsiderationNotes(formValue);
+    if (notes) body.consideration_notes = notes;
 
-    if (!payload.pickup_location.trim() || payload.pickup_location.length > 200 ||
-        !payload.destination.trim() || payload.destination.length > 200) {
-      throw new Error("乗車地と目的地は1〜200文字で入力してください。");
-    }
-    if (!Number.isInteger(payload.passenger_count) || payload.passenger_count < 1) {
-      throw new Error("乗車人数は1人以上の整数で入力してください。");
-    }
-    if (payload.consideration_notes.length > 500) {
-      throw new Error("配慮事項は選択項目と備考を合わせて500文字以内で入力してください。");
-    }
-    const result = await fetchJson("/reservations", {
-      method: "POST",
-      body: JSON.stringify(payload)
-    });
-    const reservation = toUiReservation(result.data);
-
-    reservation.care = formValue.care;
-    reservation.notes = formValue.notes;
-
-    return reservation;
+    const fieldErrors = {};
+    if (!body.pickup_location || body.pickup_location.length > 200) fieldErrors.pickup_location = "乗車場所は1〜200文字で入力してください。";
+    if (!body.destination || body.destination.length > 200) fieldErrors.destination = "目的地は1〜200文字で入力してください。";
+    if (!Number.isInteger(body.passenger_count) || body.passenger_count < 1) fieldErrors.passenger_count = "乗車人数は1人以上の整数で入力してください。";
+    if (notes.length > 500) fieldErrors.consideration_notes = "配慮事項は選択項目と備考を合わせて500文字以内で入力してください。";
+    if (Number.isNaN(Date.parse(body.requested_pickup_at))) fieldErrors.requested_pickup_at = "希望乗車日時を正しく入力してください。";
+    if (Object.keys(fieldErrors).length) throw new RoadRideAuth.ApiError(Object.values(fieldErrors)[0], { status: 422, code: "VALIDATION_ERROR", fieldErrors });
+    const payload = await RoadRideAuth.apiFetch("/reservations", { method: "POST", body });
+    return payload.data;
   }
 
-  async function listReservations() {
-    const reservations = [];
-    let page = 1;
-    let result;
-    do {
-      const params = new URLSearchParams({ page: String(page), limit: "50" });
-      result = await fetchJson(`/reservations?${params}`);
-      reservations.push(...result.data.map(toUiReservation));
-      page += 1;
-    } while (result.data.length > 0 && reservations.length < result.meta.total);
-    return reservations;
-  }
+  /**
+   * GET /api/reservations。{ data: 予約の配列, meta: { page, limit, total } } を返す
+   * @param {{status?: string, date?: string, page?: number, limit?: number}} query
+   */
+  async function listReservations({ status, date, page = 1, limit = 20 } = {}) {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (status) params.set("status", status);
+    if (date) params.set("date", date);
 
-  async function getReservation(reservationId) {
-    if (!reservationId) throw new Error("予約IDがありません。予約履歴から選び直してください。");
-    const result = await fetchJson(`/reservations/${encodeURIComponent(reservationId)}`);
-    return toUiReservation(result.data);
-  }
-
-  async function cancelReservation(reservation, reason) {
-    if (!reservation.reservationId) throw new Error("予約IDがありません。予約履歴から選び直してください。");
-    if (reason && reason.length > 500) throw new Error("キャンセル理由は500文字以内で入力してください。");
-    const result = await fetchJson(
-      `/reservations/${encodeURIComponent(reservation.reservationId)}/cancel`,
-      { method: "POST", body: JSON.stringify({ reason }) }
-    );
+    const payload = await RoadRideAuth.apiFetch(`/reservations?${params}`);
     return {
-      ...reservation,
-      status: result.data.status,
-      cancellationReason: result.data.cancellation_reason,
-      cancelledAt: result.data.cancelled_at
+      data: payload.data || [],
+      meta: payload.meta || { page, limit, total: (payload.data || []).length }
     };
   }
 
-  function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+  /** GET /api/reservations/{id}。予約（API の Reservation）を返す */
+  async function getReservation(reservationId) {
+    if (!reservationId) throw new RoadRideAuth.ApiError("予約が指定されていません。予約履歴から選び直してください。");
+    const payload = await RoadRideAuth.apiFetch(`/reservations/${encodeURIComponent(reservationId)}`, {
+      errorMessages: { 404: "指定された予約が見つかりません。" }
+    });
+    return payload.data;
   }
 
-  function showError(error) {
-    let element = document.getElementById("reservation-error");
-    if (!element) {
-      element = document.createElement("p");
-      element.id = "reservation-error";
-      element.setAttribute("role", "alert");
-      (document.querySelector("main") || document.body).prepend(element);
-    }
-    element.textContent = error.message || "通信に失敗しました。時間をおいて再度お試しください。";
+  /** POST /api/reservations/{id}/cancel。{ id, status, cancellation_reason, cancelled_at } を返す */
+  async function cancelReservation(reservationId, reason = "") {
+    if (!reservationId) throw new RoadRideAuth.ApiError("予約が指定されていません。予約履歴から選び直してください。");
+    const trimmedReason = reason.trim();
+    if (trimmedReason.length > 500) throw new RoadRideAuth.ApiError("キャンセル理由は500文字以内で入力してください。");
+    const payload = await RoadRideAuth.apiFetch(`/reservations/${encodeURIComponent(reservationId)}/cancel`, {
+      method: "POST",
+      body: trimmedReason ? { reason: trimmedReason } : {},
+      errorMessages: {
+        404: "指定された予約が見つかりません。",
+        409: "この予約はキャンセルできない状態です。"
+      }
+    });
+    return payload.data;
+  }
+
+  // ─────────────────────────────────────────
+  // エラー・読み込み中の表示
+  // ─────────────────────────────────────────
+
+  /** 例外を画面に出せる日本語のメッセージにする */
+  function errorMessage(error) {
+    if (error instanceof RoadRideAuth.ApiError) return error.message;
+    console.error(error);
+    return "処理に失敗しました。時間をおいて再度お試しください。";
+  }
+
+  /** メッセージを要素に表示する（空なら隠す） */
+  function showMessage(element, message) {
+    if (!element) return;
+    element.textContent = message || "";
+    element.hidden = !message;
+  }
+
+  /**
+   * [data-field-error="項目名"] の要素に fieldErrors のメッセージを表示する。表示した件数を返す
+   * @param {ParentNode} root
+   * @param {Object<string, string>} fieldErrors スネークケースの項目名 → 日本語メッセージ
+   */
+  function showFieldErrors(root, fieldErrors = {}) {
+    let count = 0;
+    root.querySelectorAll("[data-field-error]").forEach((element) => {
+      const message = fieldErrors[element.dataset.fieldError] || "";
+      showMessage(element, message);
+      if (message) count += 1;
+    });
+    return count;
   }
 
   return {
+    careLabels,
+    statusLabels,
+    toTokyoParts,
+    formatDate,
+    formatTime,
+    formatDateTime,
+    formatShortDateTime,
+    tokyoDateAfter,
+    buildRequestedPickupAt,
+    statusLabel,
+    statusTone,
+    isCancellable,
+    careLabel,
+    formFromParams,
+    formToParams,
+    reservationIdFromUrl,
+    pageUrl,
     createReservation,
     listReservations,
     getReservation,
     cancelReservation,
-    fromParams,
-    toParams,
-    showError,
-    escapeHtml
+    errorMessage,
+    showMessage,
+    showFieldErrors
   };
 })();

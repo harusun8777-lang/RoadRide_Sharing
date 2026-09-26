@@ -28,15 +28,6 @@
   color: var(--muted);
 }
 
-.demo-notice {
-  margin: 0 0 24px;
-  padding: 12px;
-  border-radius: 6px;
-  background: #eff6ff;
-  color: #334155;
-  font-size: 13px;
-}
-
 .form-field { margin-bottom: 20px; }
 .name-group { min-width: 0; margin: 0 0 20px; padding: 0; border: 0; }
 .name-group legend { margin-bottom: 8px; padding: 0; font-weight: 700; }
@@ -75,13 +66,31 @@
 .registration-link { margin: 0; font-size: 12px; white-space: nowrap; }
 .registration-link a { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
 .registration-link a:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
-#registration-status { margin-top: 20px; }
-.password-error { margin: 8px 0 0; color: #b91c1c; font-size: 14px; }
+.form-fieldset { margin: 0 0 4px; padding: 0; border: 0; min-width: 0; }
+.form-fieldset legend { margin-bottom: 8px; padding: 0; font-weight: 700; }
+.form-fieldset .form-field label { font-weight: 400; color: var(--muted); font-size: 14px; }
+.form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.field-hint { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+.field-error { margin: 6px 0 0; color: #b91c1c; font-size: 14px; }
+.field-error:empty,
+.form-error:empty { display: none; }
+.form-field input[aria-invalid="true"] { border-color: #b91c1c; }
+.form-error {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 14px;
+  font-weight: 700;
+}
+.login-button:disabled { opacity: 0.7; cursor: wait; }
+.login-button:disabled:hover { background: var(--blue); }
 .back-link:focus-visible,
 .form-field input:focus-visible,
 .login-button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 body[data-role="dispatcher"] .eyebrow { color: var(--warning); }
-body[data-role="dispatcher"] .demo-notice { background: #fff7ed; }
 
 @media (max-width: 480px) {
   .login-main { width: calc(100% - 28px); padding-top: 28px; }
