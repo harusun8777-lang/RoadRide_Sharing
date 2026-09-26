@@ -1,0 +1,84 @@
+.login-main {
+  width: min(100% - 40px, 480px);
+  margin: 0 auto;
+  padding: 48px 0 72px;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 20px;
+  color: var(--blue);
+}
+
+.login-panel {
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.login-panel h1 {
+  margin-top: 8px;
+  font-size: clamp(24px, 5vw, 30px);
+}
+
+.login-description {
+  margin: 16px 0;
+  color: var(--muted);
+}
+
+.demo-notice {
+  margin: 0 0 24px;
+  padding: 12px;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #334155;
+  font-size: 13px;
+}
+
+.form-field { margin-bottom: 20px; }
+.form-field label { display: block; margin-bottom: 8px; font-weight: 700; }
+.required { margin-left: 6px; color: var(--muted); font-size: 12px; }
+
+.form-field input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid #94a3b8;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.login-button {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 4px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--blue);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.login-button:hover { background: var(--blue-dark); }
+.login-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.registration-link { margin: 0; font-size: 12px; white-space: nowrap; }
+.registration-link a { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
+.registration-link a:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+#registration-status { margin-top: 20px; }
+.password-error { margin: 8px 0 0; color: #b91c1c; font-size: 14px; }
+.back-link:focus-visible,
+.form-field input:focus-visible,
+.login-button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+body[data-role="dispatcher"] .eyebrow { color: var(--warning); }
+body[data-role="dispatcher"] .demo-notice { background: #fff7ed; }
+
+@media (max-width: 480px) {
+  .login-main { width: calc(100% - 28px); padding-top: 28px; }
+  .login-panel { padding: 24px 18px; }
+}

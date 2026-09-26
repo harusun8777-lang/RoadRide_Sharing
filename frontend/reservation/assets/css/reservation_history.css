@@ -35,12 +35,32 @@
 }
 
 .summary-card {
+  position: relative;
+  overflow: hidden;
+  --summary-accent: var(--blue);
   padding: 20px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--panel);
   box-shadow: var(--shadow);
 }
+
+.summary-card::after {
+  position: absolute;
+  right: -18px;
+  bottom: -30px;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: var(--summary-accent);
+  opacity: .08;
+  pointer-events: none;
+  content: "";
+}
+
+.summary-card-blue { --summary-accent: var(--info); }
+.summary-card-green { --summary-accent: var(--success); }
+.summary-card-red { --summary-accent: var(--danger); }
 
 .summary-card strong {
   display: block;

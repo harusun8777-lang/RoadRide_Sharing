@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="../assets/css/reservation.css">
   <script src="../assets/js/reservation.js" defer></script>
+  <link rel="stylesheet" href="../assets/css/account.css">
+  <script src="../assets/js/account.js" defer></script>
 </head>
 <body>
   <div class="app-shell">
@@ -53,7 +55,7 @@
           <div class="form-grid">
             <div class="field">
               <label for="pickup-postcode">
-                乗車場所 <span class="required">必須</span>
+                乗車場所の郵便番号（任意）
               </label>
 
               <div class="postcode-row">
@@ -69,9 +71,12 @@
                 </button>
               </div>
 
+              <p class="hint" id="pickup-address-hint">郵便番号を入力せず、住所を直接入力することもできます。</p>
+              <label for="pickup-address">乗車場所の住所 <span class="required">必須</span></label>
               <input
                 id="pickup-address"
                 name="pickup-address"
+                aria-describedby="pickup-address-hint"
                 type="text"
                 placeholder="住所"
                 required
@@ -80,7 +85,7 @@
 
             <div class="field">
               <label for="destination-postcode">
-                目的地 <span class="required">必須</span>
+                目的地の郵便番号（任意）
               </label>
 
               <div class="postcode-row">
@@ -96,9 +101,12 @@
                 </button>
               </div>
 
+              <p class="hint" id="destination-address-hint">郵便番号を入力せず、住所を直接入力することもできます。</p>
+              <label for="destination-address">目的地の住所 <span class="required">必須</span></label>
               <input
                 id="destination-address"
                 name="destination-address"
+                aria-describedby="destination-address-hint"
                 type="text"
                 placeholder="住所"
                 required
