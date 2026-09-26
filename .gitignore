@@ -14,3 +14,6 @@ infra/backend.hcl
 tests/**/bin/
 tests/**/obj/
 TestResults/
+
+# Claude Code のサブエージェント用の作業ツリー
+.claude/worktrees/
