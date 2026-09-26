@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ルート・乗車順編集 | RoadRide Sharing</title>
+  <link rel="stylesheet" href="../assets/css/route-edit.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-inner">
+        <a class="brand" href="reservations.html" aria-label="予約一覧へ戻る">
+          <span class="brand-mark">RR</span>
+          <span><strong>RoadRide Sharing</strong><small>配車管理</small></span>
+        </a>
+        <a class="back-link" href="ai-candidates.html">← AI配車候補</a>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="breadcrumb">
+        <a href="reservations.html">予約一覧</a>
+        <span>›</span>
+        <a href="ai-candidates.html">AI配車候補</a>
+        <span>›</span>
+        <strong>ルート・乗車順編集</strong>
+      </div>
+
+      <section class="page-heading">
+        <div>
+          <p class="eyebrow">ROUTE EDIT</p>
+          <h1>ルート・乗車順編集</h1>
+          <p class="page-description">候補の順序や出発時刻を見直し、乗車の流れが自然になるように調整します。</p>
+        </div>
+        <span class="status status-info" id="edit-status">未反映</span>
+      </section>
+
+      <div class="route-edit-layout">
+        <section class="panel order-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">SEQUENCE</p>
+              <h2>乗車順の調整</h2>
+            </div>
+            <span class="selection-count" id="group-count">2名</span>
+          </div>
+
+          <div class="order-list" id="order-list" aria-live="polite"></div>
+        </section>
+
+        <aside class="side-column">
+          <section class="panel summary-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">ROUTE PLAN</p>
+                <h2>配車設定</h2>
+              </div>
+            </div>
+
+            <dl class="summary-list">
+              <div><dt>候補</dt><dd>候補 A</dd></div>
+              <div><dt>車両</dt><dd>乗合タクシー 1号車</dd></div>
+              <div><dt>出発予定</dt><dd id="summary-departure">09:55</dd></div>
+              <div><dt>乗車人数</dt><dd>2名 / 4名</dd></div>
+            </dl>
+
+            <div class="form-grid">
+              <label>
+                <span>車両</span>
+                <select id="vehicle-edit">
+                  <option selected>乗合タクシー 1号車</option>
+                  <option>乗合タクシー 2号車</option>
+                  <option>乗合タクシー 3号車</option>
+                </select>
+              </label>
+
+              <label>
+                <span>出発予定時刻</span>
+                <div class="time-control">
+                  <input id="departure-edit" type="time" value="09:55">
+                  <div class="time-stepper" aria-label="出発時刻を10分または30分調整">
+                    <button type="button" data-time-step="-30">−30分</button>
+                    <button type="button" data-time-step="-10">−10分</button>
+                    <button type="button" data-time-step="10">＋10分</button>
+                    <button type="button" data-time-step="30">＋30分</button>
+                  </div>
+                </div>
+              </label>
+
+              <label>
+                <span>変更理由</span>
+                <textarea id="change-reason" rows="4">大きな荷物があるため、乗車順を見直し対象にしました。</textarea>
+              </label>
+            </div>
+
+            <div class="warning-box">
+              <strong>確認事項</strong>
+              <p>鈴木 一郎さんの荷物量に合わせて、前側の席を優先して配置しています。</p>
+            </div>
+
+            <div class="button-row">
+              <button class="button button-primary" id="apply-edit" type="button">変更を適用</button>
+              <button class="button button-secondary" id="back-candidate" type="button">候補へ戻る</button>
+            </div>
+          </section>
+
+          <section class="panel route-panel">
+            <p class="eyebrow">ROUTE PREVIEW</p>
+            <h2>運行ルート</h2>
+            <div class="route-line" id="route-line" aria-live="polite"></div>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <nav class="bottom-nav" aria-label="メインメニュー">
+      <a class="bottom-nav-item" href="dashboard.html"><span>⌂</span><small>ダッシュボード</small></a>
+      <a class="bottom-nav-item is-active" href="reservations.html"><span>▦</span><small>予約一覧</small></a>
+      <a class="bottom-nav-item" href="reservations.html?status=in_progress"><span>◷</span><small>運行状況</small></a>
+    </nav>
+  </div>
+
+  <script src="../assets/js/route-edit.js"></script>
+</body>
+</html>
