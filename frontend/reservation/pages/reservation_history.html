@@ -8,6 +8,7 @@
 
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="../assets/css/reservation_history.css">
+  <script src="../../shared/js/auth.js" defer></script>
   <script src="../assets/js/reservation_api.js" defer></script>
   <script src="../assets/js/reservation_history.js" defer></script>
   <link rel="stylesheet" href="../assets/css/account.css">
@@ -44,7 +45,7 @@
       <article class="summary-card">
         <span class="summary-label">予約件数</span>
         <strong id="total-count">0</strong>
-        <span class="summary-note">保存されている予約</span>
+        <span class="summary-note">すべての予約</span>
       </article>
       <article class="summary-card summary-card-blue">
         <span class="summary-label">マッチング中</span>
@@ -68,15 +69,15 @@
         <div class="panel-heading">
           <div>
             <h2>予約データ</h2>
-            <p><span id="result-count">0</span>件の予約を表示中</p>
+            <p id="result-summary">読み込み中…</p>
           </div>
-          <button class="icon-button" id="refresh-button" type="button" title="一覧を初期状態に戻す" aria-label="一覧を初期状態に戻す">↻</button>
+          <button class="icon-button" id="refresh-button" type="button" title="絞り込みを解除して再読み込み" aria-label="絞り込みを解除して再読み込み">↻</button>
         </div>
 
         <div class="filters">
           <label class="search-field">
             <span>予約を検索</span>
-            <input id="search-input" type="search" placeholder="予約番号・乗車場所・目的地" autocomplete="off">
+            <input id="search-input" type="search" placeholder="予約番号・乗車場所・目的地（表示中のページ内）" autocomplete="off">
           </label>
           <label>
             <span>乗車日</span>
@@ -88,11 +89,14 @@
               <option value="all">すべての状態</option>
               <option value="matching">マッチング中</option>
               <option value="confirmed">予約確定</option>
+              <option value="in_progress">乗車中</option>
               <option value="completed">乗車完了</option>
               <option value="cancelled">キャンセル</option>
             </select>
           </label>
         </div>
+
+        <p class="alert" id="page-error" role="alert" hidden></p>
 
         <div class="table-container">
           <table>
@@ -110,13 +114,19 @@
           </table>
           <div class="empty-state" id="empty-state" hidden>
             <span class="empty-icon">⌕</span>
-            <strong>該当する予約がありません</strong>
-            <p>検索条件を変更して、もう一度お試しください。</p>
+            <strong id="empty-title">該当する予約がありません</strong>
+            <p id="empty-text">検索条件を変更して、もう一度お試しください。</p>
             <a class="primary link-button" href="reservation.html">
               新しく予約する
             </a>
           </div>
         </div>
+
+        <nav class="pagination" id="pagination" aria-label="ページ送り" hidden>
+          <button type="button" class="secondary" id="prev-page">前へ</button>
+          <span id="page-info">1 / 1 ページ</span>
+          <button type="button" class="secondary" id="next-page">次へ</button>
+        </nav>
       </div>
     </section>
   </main>

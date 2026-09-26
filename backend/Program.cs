@@ -73,8 +73,10 @@ builder.Services.AddScoped<SwitchUserRoleUseCase>();
 var app = builder.Build();
 
 // マイグレーション導入までは起動時にスキーマを作成する（DBが無ければ作成、あれば何もしない）
-using (var scope = app.Services.CreateScope())
+// DB を使わないテストでは Database:EnsureCreatedOnStartup=false で止める
+if (app.Configuration.GetValue("Database:EnsureCreatedOnStartup", true))
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
 }
@@ -103,3 +105,6 @@ apiGroup.MapUserEndpoints();
 app.MapHealthEndpoints();
 
 app.Run();
+
+// テストプロジェクトから WebApplicationFactory<Program> で参照するために公開する
+public partial class Program { }

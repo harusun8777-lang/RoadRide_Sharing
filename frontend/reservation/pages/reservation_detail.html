@@ -8,6 +8,7 @@
 
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="../assets/css/reservation_detail.css">
+  <script src="../../shared/js/auth.js" defer></script>
   <script src="../assets/js/reservation_api.js" defer></script>
   <script src="../assets/js/reservation_detail.js" defer></script>
   <link rel="stylesheet" href="../assets/css/account.css">
@@ -38,10 +39,13 @@
       <p class="eyebrow">RESERVATION DETAIL</p>
       <h1>予約詳細</h1>
       <p>予約内容と現在の状態を確認できます。</p>
-      <span class="status info" id="status-badge">マッチング中</span>
+      <span class="status info" id="status-badge" hidden>---</span>
     </section>
 
-    <div class="detail-layout">
+    <p class="loading-message" id="page-loading" role="status" hidden></p>
+    <p class="alert" id="page-error" role="alert" hidden></p>
+
+    <div class="detail-layout" id="detail-content" hidden>
       <section class="content-column">
         <article class="panel reservation-card">
           <div class="card-heading">
@@ -98,6 +102,7 @@
           </div>
         </article>
 
+        <!-- 確定した配車内容。API（GET /api/reservations/{id}）にまだ項目がないため表示しない -->
         <article class="panel confirmation-card" id="confirmed-details" hidden>
           <div class="card-heading">
             <div>
@@ -145,9 +150,10 @@
         <section class="panel action-card">
           <h2>予約操作</h2>
           <p>予約内容を確認し、必要に応じてキャンセルできます。</p>
-          <a class="cancel-link link-button" id="cancel-button" href="reservation_cancel.html">
+          <a class="cancel-link link-button" id="cancel-button" href="reservation_cancel.html" hidden>
             予約をキャンセル
           </a>
+          <p class="alert alert-notice" id="cancel-note" hidden></p>
         </section>
       </aside>
     </div>

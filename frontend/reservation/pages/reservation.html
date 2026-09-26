@@ -7,6 +7,8 @@
   <title>乗車予約 | RoadRide Sharing</title>
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="../assets/css/reservation.css">
+  <script src="../../shared/js/auth.js" defer></script>
+  <script src="../assets/js/reservation_api.js" defer></script>
   <script src="../assets/js/reservation.js" defer></script>
   <link rel="stylesheet" href="../assets/css/account.css">
   <script src="../assets/js/account.js" defer></script>
@@ -154,7 +156,12 @@
 
             <div class="field full">
               <label for="notes">補足事項</label>
-              <textarea id="notes" name="notes" placeholder="配車担当者に伝えたいことがあれば入力してください"></textarea>
+              <textarea
+                id="notes"
+                name="notes"
+                maxlength="480"
+                placeholder="配車担当者に伝えたいことがあれば入力してください"
+              ></textarea>
               <p class="hint">入力内容は配車担当者が確認します。</p>
             </div>
           </div>

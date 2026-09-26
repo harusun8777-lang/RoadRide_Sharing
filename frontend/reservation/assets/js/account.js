@@ -2,15 +2,16 @@
   const header = document.querySelector(".topbar-inner, .app-header .header-inner");
   if (!header) return;
 
-  // MVPでは user-001 を利用するため、認証APIができるまでは仮の表示名を使う。
-  const isDispatcher = header.classList.contains("header-inner");
-  const userName = isDispatcher ? "田中 健一" : "仮ユーザー";
+  // 利用者名は GET /api/users/me で取得する。取得できるまでは仮の表示にしておく
+  const hasAuth = typeof RoadRideAuth !== "undefined";
+  const isLoggedIn = hasAuth && RoadRideAuth.isTokenValid();
+  const userName = isLoggedIn ? "読み込み中…" : "未ログイン";
   header.classList.add("account-header");
   header.querySelector(".header-user")?.remove();
   const headerUser = document.createElement("div");
   headerUser.className = "account-header-user";
   headerUser.innerHTML = '<span class="account-avatar" aria-hidden="true">仮</span>';
-  headerUser.querySelector(".account-avatar").textContent = isDispatcher ? "田" : "仮";
+  headerUser.querySelector(".account-avatar").textContent = "・";
   const accountButton = document.createElement("button");
   accountButton.type = "button";
   accountButton.className = "account-button";
@@ -37,6 +38,18 @@
     </div>`;
 
   menu.querySelector(".account-user-name").textContent = userName;
+
+  if (isLoggedIn) {
+    RoadRideAuth.getMe()
+      .then((user) => {
+        menu.querySelector(".account-user-name").textContent = `${user.last_name} ${user.first_name}`;
+        headerUser.querySelector(".account-avatar").textContent = user.last_name.charAt(0) || "・";
+      })
+      .catch(() => {
+        // 401 のときは auth.js がログイン画面へ移動する。それ以外は名前を出さずに画面の操作を続けられるようにする
+        menu.querySelector(".account-user-name").textContent = "利用者情報を取得できませんでした";
+      });
+  }
   // 配車画面の既存の補助リンクもメニューにまとめ、ヘッダーを一行に保つ。
   const headerLinks = header.querySelectorAll(".header-actions a, :scope > .back-link");
   if (headerLinks.length) {
@@ -95,7 +108,11 @@
   confirmDialog.querySelector('[data-action="cancel"]').addEventListener("click", () => confirmDialog.close());
   confirmDialog.addEventListener("close", () => accountButton.focus());
   confirmDialog.querySelector('[data-action="confirm"]').addEventListener("click", () => {
-    // 仮ログインでは認証情報を保持していない。認証導入時にセッション破棄を追加する。
-    window.location.assign("../../top/index.html");
+    // トークンを削除してトップページへ戻る
+    if (hasAuth) {
+      RoadRideAuth.logout();
+      return;
+    }
+    window.location.assign("/top/index.html");
   });
 })();

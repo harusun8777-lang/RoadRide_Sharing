@@ -35,6 +35,32 @@
   word-break: break-word;
 }
 
+/* API から取得した予約の概要 */
+.complete-summary {
+  display: grid;
+  margin: 20px 0 0;
+  text-align: left;
+  border-top: 1px solid var(--line);
+}
+
+.complete-summary > div {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.complete-summary dt {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.complete-summary dd {
+  margin: 0;
+  word-break: break-word;
+}
+
 .button-area {
   display: flex;
   flex-wrap: wrap;
@@ -51,6 +77,11 @@
 }
 
 @media (max-width: 767px) {
+  .complete-summary > div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
   #reservation-number {
     font-size: 26px;
   }

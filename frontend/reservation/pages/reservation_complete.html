@@ -8,6 +8,7 @@
 
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="../assets/css/reservation_complete.css">
+  <script src="../../shared/js/auth.js" defer></script>
   <script src="../assets/js/reservation_api.js" defer></script>
   <script src="../assets/js/reservation_complete.js" defer></script>
   <link rel="stylesheet" href="../assets/css/account.css">
@@ -33,10 +34,32 @@
       <p class="eyebrow">COMPLETE</p>
       <h1>予約が完了しました</h1>
 
+      <p class="loading-message" id="page-loading" role="status" hidden></p>
+      <p class="alert" id="page-error" role="alert" hidden></p>
+
       <div class="reservation-number-box">
         <span class="reservation-number-label">予約番号</span>
         <strong id="reservation-number">---</strong>
       </div>
+
+      <dl class="complete-summary" id="reservation-summary" hidden>
+        <div>
+          <dt>希望乗車日時</dt>
+          <dd id="summary-datetime">---</dd>
+        </div>
+        <div>
+          <dt>乗車場所</dt>
+          <dd id="summary-pickup">---</dd>
+        </div>
+        <div>
+          <dt>目的地</dt>
+          <dd id="summary-destination">---</dd>
+        </div>
+        <div>
+          <dt>乗車人数</dt>
+          <dd id="summary-passengers">---</dd>
+        </div>
+      </dl>
 
       <div class="button-area">
         <a class="primary link-button" id="detail-button" href="reservation_detail.html">

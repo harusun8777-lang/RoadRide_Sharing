@@ -8,6 +8,7 @@
 
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="../assets/css/reservation_confirm.css">
+  <script src="../../shared/js/auth.js" defer></script>
   <script src="../assets/js/reservation_api.js" defer></script>
   <script src="../assets/js/reservation_confirm.js" defer></script>
   <link rel="stylesheet" href="../assets/css/account.css">
@@ -42,6 +43,8 @@
 
     <section class="panel">
 
+      <p class="alert" id="page-error" role="alert" hidden></p>
+
       <div class="section-title">
         <h2>予約内容</h2>
       </div>
@@ -52,16 +55,19 @@
         <div class="confirm-item">
           <span class="confirm-label">乗車場所</span>
           <span id="confirm-pickup">---</span>
+          <p class="field-error" data-field-error="pickup_location" hidden></p>
         </div>
 
         <div class="confirm-item">
           <span class="confirm-label">目的地</span>
           <span id="confirm-destination">---</span>
+          <p class="field-error" data-field-error="destination" hidden></p>
         </div>
 
         <div class="confirm-item">
           <span class="confirm-label">希望乗車日</span>
           <span id="confirm-date">---</span>
+          <p class="field-error" data-field-error="requested_pickup_at" hidden></p>
         </div>
 
         <div class="confirm-item">
@@ -72,6 +78,7 @@
         <div class="confirm-item">
           <span class="confirm-label">利用人数</span>
           <span id="confirm-passengers">---</span>
+          <p class="field-error" data-field-error="passenger_count" hidden></p>
         </div>
 
         <div class="confirm-item">
@@ -82,6 +89,7 @@
         <div class="confirm-item">
           <span class="confirm-label">備考</span>
           <span id="confirm-notes">---</span>
+          <p class="field-error" data-field-error="consideration_notes" hidden></p>
         </div>
 
       </div>

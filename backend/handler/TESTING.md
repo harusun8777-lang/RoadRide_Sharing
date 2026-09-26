@@ -60,6 +60,7 @@ tests/backend.Tests/
 ├── Handler/
 │   ├── ApiFactory.cs         # WebApplicationFactory<Program> の派生
 │   ├── TestJwt.cs            # テスト用 JWT の発行
+│   ├── ApiAssert.cs          # JSON の読み取り・キーの集合・エラー形式の検証などの補助
 │   ├── ProgramTests.cs       # 認証・認可（Program.cs の設定）
 │   ├── HealthHandlerTests.cs
 │   ├── AuthHandlerTests.cs
@@ -156,15 +157,15 @@ public class ReservationHandlerTests : IClassFixture<ApiFactory>
     [Fact]
     public async Task GetAsync_他人の予約_404とNOT_FOUNDを返す()
     {
-        var me = TestData.Rider();
-        var other = TestData.Rider();
+        var me = TestUsers.Rider();
+        var other = TestUsers.Rider();
         _factory.Users.Seed(me, other);
-        var reservation = TestData.Reservation(userId: other.Id);
+        var reservation = TestReservations.Matching(other.Id);
         _factory.Reservations.Seed(reservation);
 
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", TestJwt.CreateToken(me.Id));
+            new AuthenticationHeaderValue("Bearer", TestJwt.CreateToken(me));
 
         var response = await client.GetAsync($"/api/reservations/{reservation.Id}");
 
@@ -187,7 +188,7 @@ public class ReservationHandlerTests : IClassFixture<ApiFactory>
 
 ### 前提となる変更
 
-テストを書く前に、本体に次の変更が必要です（このドキュメントの作成時点では未対応）。
+テストを書く前に、本体に次の変更が必要です（どちらも対応済み）。
 
 | # | 変更 | 理由 |
 | --- | --- | --- |
@@ -230,6 +231,7 @@ public class ReservationHandlerTests : IClassFixture<ApiFactory>
 
 「保護 API 7 本」は `GET /api/users/me`、`POST /api/users/me/roles`、`PUT /api/users/me/active-role`、`POST /api/reservations`、`GET /api/reservations`、`GET /api/reservations/{id}`、`POST /api/reservations/{id}/cancel` を指します。
 401 のテストでは、ボディを取るエンドポイントに**正しいボディ**を付けます（ボディの読み取りはハンドラーの本人確認より先に行われるため。[5. 既知の問題](#5-既知の問題仕様の曖昧な点) の 3）。
+「ボディなし」は、Content 自体を付けない場合と、`Content-Type: application/json` の空ボディの場合の両方を確認します（どちらも 400。`Content-Type` が JSON でないボディは 415 になるが、ケースにしない）。
 
 ### 4.1 認証・認可（`ProgramTests`）
 
@@ -392,8 +394,8 @@ HTTP を使わず、`ClaimsPrincipal` を直接作って確認します。
 
 | # | 内容 | テストでの扱い |
 | --- | --- | --- |
-| 1 | `requested_pickup_at` をオフセット付き（`+09:00`）で送ると、System.Text.Json は `DateTimeKind.Local` の値に変換する。201 のレスポンスは保存前のオブジェクトをそのまま返すため、`Z` ではなくサーバーのタイムゾーンのオフセット付きで返る可能性がある（ENDPOINT.md は「レスポンスの日時は UTC（末尾が `Z`）」）。オフセットなしで送った場合も `Z` なしになる可能性がある。要確認 | H-056 は `Z` 付きの入力で確認する。オフセット付きの入力は、結果が実行環境（ローカルは JST、CI は UTC）で変わるおそれがあるため、仕様が決まるまでケースに入れない |
-| 2 | `requested_pickup_at` は仕様上必須だが、省略すると `0001-01-01T00:00:00` として受け付けられ、201 になる。過去の日時のチェックもない | 現状の動作を固定するケースは作らない。仕様を決めてから追加する |
+| 1 | `requested_pickup_at` をオフセット付き（`+09:00`）で送ると、System.Text.Json は `DateTimeKind.Local` の値に変換する。201 のレスポンスは保存前のオブジェクトをそのまま返すため、`Z` ではなくサーバーのタイムゾーンのオフセット付きで返る可能性がある（ENDPOINT.md は「レスポンスの日時は UTC（末尾が `Z`）」）。オフセットなしで送った場合も `Z` なしになる可能性がある。**確認済み**：`+09:00` で送るとレスポンスは `+09:00`（実行環境のオフセット）、オフセットなしで送ると `2026-10-01T09:00:00`（`Z` なし）で返る。ENDPOINT.md と食い違う | H-056 は `Z` 付きの入力で確認する。オフセット付きの入力は、結果が実行環境（ローカルは JST、CI は UTC）で変わるおそれがあるため、仕様が決まるまでケースに入れない |
+| 2 | `requested_pickup_at` は仕様上必須だが、省略すると `0001-01-01T00:00:00` として受け付けられ、201 になる（確認済み。レスポンスも `Z` なし）。過去の日時のチェックもない | 現状の動作を固定するケースは作らない。仕様を決めてから追加する |
 | 3 | ボディの読み取り（400）はハンドラーの本人確認（401）より先に行われる。ユーザー不在のトークンで不正なボディを送ると 400 になる | 401 のテストでは正しいボディを送る |
 | 4 | 401 には 2 種類ある。認証ミドルウェアが返すもの（`WWW-Authenticate: Bearer` あり）と、ハンドラーの `Results.Unauthorized()`（`sub` なし・ユーザー不在。`WWW-Authenticate` なし）。ENDPOINT.md では区別していない | `WWW-Authenticate` は H-001 だけで確認する |
 | 5 | `POST /api/reservations` と `POST /api/users/me/roles` は `InvalidOperationException` をすべて捕まえ、固定のメッセージの 409 にしている。想定外の `InvalidOperationException` も 409 になる | Fake からは起きないため、ケースにしない |
@@ -401,10 +403,10 @@ HTTP を使わず、`ClaimsPrincipal` を直接作って確認します。
 | 7 | `details[].field` は `role` / `password` / `status` 以外がキャメルケース（ENDPOINT.md の「既知の制約」どおり）。`details[].message` も英語 | 現状の値（`kanaLastName` など）で確認する。修正したらテストも直す |
 | 8 | 409 のキャンセル不可のメッセージは domain の例外メッセージそのもの | H-083 は完全一致で確認する。domain の文言を変えると handler のテストも落ちる |
 | 9 | `meta.page` / `meta.limit` はリクエストの値をそのまま返す。ENDPOINT.md の「1 未満は 1 / 50 として扱う」はリポジトリでの補正 | handler 層では生の値の受け渡し（H-073）だけを確認する |
-| 10 | 最小 API の JSON 既定値（`JsonSerializerDefaults.Web`）では数値を文字列でも読めるため、`"passenger_count": "2"` は 400 にならず受け付けられると考えられる。要確認 | 400 のケースは `"abc"` のように数値として読めない値を使う |
-| 11 | `HealthCheckMiddleware` は既定で `Cache-Control` などのキャッシュ禁止ヘッダーを付け、そのあと `WriteResponseAsync` が `Cache-Control: no-store` で上書きすると考えられる。`Pragma` などが残る可能性がある。要確認 | `Cache-Control` は文字列の完全一致ではなく `NoStore` が `true` かで確認する |
+| 10 | 最小 API の JSON 既定値（`JsonSerializerDefaults.Web`）では数値を文字列でも読めるため、`"passenger_count": "2"` は 400 にならず受け付けられると考えられる。**確認済み**：201 になり `passenger_count` = 2 として保存される | 400 のケースは `"abc"` のように数値として読めない値を使う |
+| 11 | `HealthCheckMiddleware` は既定で `Cache-Control` などのキャッシュ禁止ヘッダーを付け、そのあと `WriteResponseAsync` が `Cache-Control: no-store` で上書きすると考えられる。`Pragma` などが残る可能性がある。**確認済み**：`Cache-Control: no-store` に上書きされ、`Pragma: no-cache` と `Expires: Thu, 01 Jan 1970 00:00:00 GMT` は残る | `Cache-Control` は文字列の完全一致ではなく `NoStore` が `true` かで確認する |
 | 12 | `/health` の Degraded は 200 になる（ASP.NET Core の既定）。ENDPOINT.md は 200 / 503 しか書いていない（SWAGGER.yaml の列挙には `Degraded` がある） | H-018 で現状を確認する。今のチェックは Degraded を返さない |
-| 13 | クエリの `from` / `to` にオフセット付きの日時を入れる場合、`+` を `%2B` にしないと空白として解釈される。また、バインド後の `DateTime` の `Kind` は要確認 | H-068 は `Z` 付きの値を使い、比較は時刻の値（UTC に揃えて）で行う |
+| 13 | クエリの `from` / `to` にオフセット付きの日時を入れる場合、`+` を `%2B` にしないと空白として解釈される。バインド後の `DateTime` の `Kind` は **確認済み**：`Utc`（`Z` 付きはそのまま、`%2B09:00` 付きは UTC に変換される） | H-068 は `Z` 付きの値を使い、比較は時刻の値（UTC に揃えて）で行う |
 | 14 | Development 環境では最小 API のバインドエラーが例外として投げられ、開発者例外ページが応答する（400 の本文が変わる） | テストは `Testing` 環境で実行し、400 はステータスだけを確認する |
 | 15 | メールアドレスの重複判定の大文字小文字の扱いは、本番は SQL Server の照合順序に、テストは Fake の実装に依存する | H-032 は完全に同じ文字列で確認する |
 
