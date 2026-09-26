@@ -1,0 +1,26 @@
+info:
+  name: Cancel Reservation
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/reservations/:reservationId/cancel"
+  params:
+    - name: reservationId
+      value: ""
+      type: path
+  headers:
+    - name: Authorization
+      value: "Bearer {{accessToken}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "reason": "利用者都合によるキャンセル"
+      }
+
+settings:
+  encodeUrl: true

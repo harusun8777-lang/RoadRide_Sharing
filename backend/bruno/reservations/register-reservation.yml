@@ -1,0 +1,26 @@
+info:
+  name: Register Reservation
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/reservations"
+  headers:
+    - name: Authorization
+      value: "Bearer {{accessToken}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "pickup_location": "東京駅",
+        "destination": "羽田空港",
+        "requested_pickup_at": "2026-09-30T09:00:00Z",
+        "passenger_count": 1,
+        "consideration_notes": null
+      }
+
+settings:
+  encodeUrl: true

@@ -1,0 +1,22 @@
+info:
+  name: Add User Role
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/users/me/roles"
+  headers:
+    - name: Authorization
+      value: "Bearer {{accessToken}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "role": "driver"
+      }
+
+settings:
+  encodeUrl: true

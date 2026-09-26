@@ -1,0 +1,26 @@
+info:
+  name: Register User
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/users"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "email": "taro.yamada@example.com",
+        "password": "password1234",
+        "last_name": "山田",
+        "first_name": "太郎",
+        "kana_last_name": "ヤマダ",
+        "kana_first_name": "タロウ",
+        "role": "rider"
+      }
+
+settings:
+  encodeUrl: true

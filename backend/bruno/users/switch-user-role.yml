@@ -1,0 +1,22 @@
+info:
+  name: Switch User Role
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/users/me/active-role"
+  headers:
+    - name: Authorization
+      value: "Bearer {{accessToken}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "role": "driver"
+      }
+
+settings:
+  encodeUrl: true
