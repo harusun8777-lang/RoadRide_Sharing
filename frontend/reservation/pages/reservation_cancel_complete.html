@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>予約キャンセル完了 | RoadRide Sharing</title>
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/reservation_cancel_complete.css">
+  <script src="../assets/js/reservation_api.js" defer></script>
+  <script src="../assets/js/reservation_cancel_complete.js" defer></script>
+  <link rel="stylesheet" href="../assets/css/account.css">
+  <script src="../assets/js/account.js" defer></script>
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">RR</div>
+        <div>
+          <strong>RoadRide Sharing</strong>
+          <small>地域AI乗り合い交通</small>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main cancel-complete-page">
+    <nav class="breadcrumb" aria-label="現在位置">
+      <a id="breadcrumb-history-link" href="reservation_history.html">予約履歴</a>
+      <span aria-hidden="true">→</span>
+      <span>キャンセル完了</span>
+    </nav>
+
+    <section class="panel complete-panel">
+      <p class="eyebrow">CANCEL COMPLETE</p>
+      <h1>予約をキャンセルしました</h1>
+
+      <div class="reservation-number-box">
+        <span class="reservation-number-label">予約番号</span>
+        <strong id="reservation-number">---</strong>
+      </div>
+
+      <div class="button-area">
+        <a class="secondary link-button" id="history-button" href="reservation_history.html">
+          予約履歴
+        </a>
+        <a class="primary link-button" href="reservation.html">
+          新しく予約する
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="主要画面">
+    <a class="bottom-nav-item" href="reservation.html">
+      <span aria-hidden="true">＋</span>
+      <small>新規予約</small>
+    </a>
+    <a class="bottom-nav-item is-active" href="reservation_history.html" aria-current="page">
+      <span aria-hidden="true">▦</span>
+      <small>予約履歴</small>
+    </a>
+    <span class="bottom-nav-item is-disabled" aria-disabled="true">
+      <span aria-hidden="true">◷</span>
+      <small>運行状況</small>
+    </span>
+  </nav>
+
+</body>
+</html>
