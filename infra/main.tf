@@ -3,6 +3,10 @@ locals {
     service    = "rideshare"
     managed_by = "terraform"
   }
+
+  # tfvars で指定されていればその値を、なければ Terraform が生成した値を使う
+  sql_admin_password = coalesce(var.sql_admin_password, random_password.sql_admin.result)
+  jwt_signing_key    = coalesce(var.jwt_signing_key, random_password.jwt_signing_key.result)
 }
 
 # ACR や SQL Server のように Azure 全体で一意な名前が必要なリソース用のサフィックス
@@ -74,7 +78,7 @@ resource "azurerm_mssql_server" "main" {
   location                     = azurerm_resource_group.main.location
   version                      = "12.0"
   administrator_login          = var.sql_admin_login
-  administrator_login_password = random_password.sql_admin.result
+  administrator_login_password = local.sql_admin_password
   minimum_tls_version          = "1.2"
   tags                         = local.tags
 }
@@ -133,12 +137,12 @@ resource "azurerm_container_app" "backend" {
 
   secret {
     name  = "db-connection-string"
-    value = "Server=tcp:${azurerm_mssql_server.main.fully_qualified_domain_name},1433;Database=${azurerm_mssql_database.main.name};User Id=${var.sql_admin_login};Password=${random_password.sql_admin.result};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30"
+    value = "Server=tcp:${azurerm_mssql_server.main.fully_qualified_domain_name},1433;Database=${azurerm_mssql_database.main.name};User Id=${var.sql_admin_login};Password=${local.sql_admin_password};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30"
   }
 
   secret {
     name  = "jwt-signing-key"
-    value = random_password.jwt_signing_key.result
+    value = local.jwt_signing_key
   }
 
   ingress {

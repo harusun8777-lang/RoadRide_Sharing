@@ -159,6 +159,25 @@ az login --tenant a45b5a16-0d27-4285-8e28-2d5be8568d98
 terraform init -backend-config=backend.hcl
 ```
 
+#### シークレットを指定する（任意）
+
+SQL の管理者パスワードと JWT の署名鍵は、指定しなければ Terraform がランダムに生成します。
+自分で決めた値を使う場合は、ルートの `.env` から `secrets.auto.tfvars` を作ります（`*.auto.tfvars` は Terraform が自動で読み込みます）。
+
+```sh
+./scripts/env-to-tfvars.sh
+```
+
+| `.env` のキー | Terraform の変数 |
+| --- | --- |
+| `MSSQL_SA_PASSWORD` | `sql_admin_password` |
+| `JWT_SIGNING_KEY` | `jwt_signing_key` |
+
+- `.env.example` と同じ値（リポジトリで公開されているサンプル値）は書き出しません。その項目はランダムな値のままになります
+- `secrets.auto.tfvars` は `.gitignore` 済みです。コミットしないでください
+- 手で作る場合は `secrets.auto.tfvars.example` をコピーします
+- 値を変えて `apply` すると、SQL のパスワードと Container App のシークレットが更新されます。JWT の署名鍵を変えた場合、発行済みのトークンは使えなくなります
+
 ### 5. ACR を作ってイメージを入れる
 
 Container App はイメージが無いと起動できないため、先に ACR だけ作ってイメージを入れます。

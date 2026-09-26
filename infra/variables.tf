@@ -34,6 +34,31 @@ variable "frontend_origins" {
   default     = []
 }
 
+variable "sql_admin_password" {
+  description = "Azure SQL の管理者パスワード。未指定なら Terraform がランダムに生成する（secrets.auto.tfvars で渡す）"
+  type        = string
+  default     = null
+  sensitive   = true
+
+  validation {
+    condition     = var.sql_admin_password == null || try(length(var.sql_admin_password) >= 8 && length(var.sql_admin_password) <= 128, false)
+    error_message = "sql_admin_password は 8〜128 文字にしてください。"
+  }
+}
+
+variable "jwt_signing_key" {
+  description = "JWT の署名鍵。未指定なら Terraform がランダムに生成する（secrets.auto.tfvars で渡す）"
+  type        = string
+  default     = null
+  sensitive   = true
+
+  validation {
+    # HS256 の鍵は 256bit 以上が必要（backend の JwtOptions.MinSigningKeyBytes と同じ）
+    condition     = var.jwt_signing_key == null || try(length(var.jwt_signing_key) >= 32, false)
+    error_message = "jwt_signing_key は 32 文字以上にしてください。"
+  }
+}
+
 variable "sql_admin_login" {
   description = "Azure SQL の管理者ユーザー名"
   type        = string
