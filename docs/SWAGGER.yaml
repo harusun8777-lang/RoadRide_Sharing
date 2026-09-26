@@ -1,9 +1,9 @@
 openapi: 3.0.3
 info:
-  title: RoadRide Sharing API
+  title: Hitch Tac API
   version: 0.1.0
   description: |
-    地域AI乗り合い交通サービス RoadRide Sharing のバックエンド API（実装済みのエンドポイントのみ）。
+    地域AI乗り合い交通サービス Hitch Tac のバックエンド API（実装済みのエンドポイントのみ）。
 
     - JSON のキーはスネークケース。日時は ISO 8601 形式で、レスポンスは UTC で返す
     - `/api/users`（登録）、`/api/auth/login`、`/health` 以外は JWT（`Authorization: Bearer <token>`）が必要
