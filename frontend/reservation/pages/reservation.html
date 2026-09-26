@@ -6,6 +6,8 @@
   <title>乗車予約 | RoadRide Sharing</title>
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="../assets/css/reservation.css">
+  <script src="../../shared/js/auth.js" defer></script>
+  <script src="../assets/js/reservation_api.js" defer></script>
   <script src="../assets/js/reservation.js" defer></script>
   <link rel="stylesheet" href="../assets/css/account.css">
   <script src="../assets/js/account.js" defer></script>
@@ -76,6 +78,7 @@
               <input
                 id="pickup-address"
                 name="pickup-address"
+                maxlength="200"
                 aria-describedby="pickup-address-hint"
                 type="text"
                 placeholder="住所"
@@ -106,6 +109,7 @@
               <input
                 id="destination-address"
                 name="destination-address"
+                maxlength="200"
                 aria-describedby="destination-address-hint"
                 type="text"
                 placeholder="住所"
@@ -165,6 +169,7 @@
               <textarea
                 id="notes"
                 name="notes"
+                maxlength="480"
                 placeholder="配車担当者に伝えたいことがあれば入力してください"
               ></textarea>
               <p class="hint">入力内容は配車担当者が確認します。</p>

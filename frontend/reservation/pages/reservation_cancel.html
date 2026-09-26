@@ -8,6 +8,7 @@
 
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="../assets/css/reservation_cancel.css">
+  <script src="../../shared/js/auth.js" defer></script>
   <script src="../assets/js/reservation_api.js" defer></script>
   <script src="../assets/js/reservation_cancel.js" defer></script>
   <link rel="stylesheet" href="../assets/css/account.css">
@@ -36,6 +37,9 @@
     </section>
 
     <section class="panel cancel-panel">
+      <p class="loading-message" id="page-loading" role="status" hidden></p>
+      <p class="alert" id="page-error" role="alert" hidden></p>
+
       <div class="detail-heading">
         <div>
           <span class="detail-label">予約番号</span>
@@ -64,6 +68,16 @@
           <span class="detail-label">乗車人数</span>
           <span id="passengers">---</span>
         </div>
+
+        <div class="detail-item">
+          <span class="detail-label">予約状態</span>
+          <span id="status">---</span>
+        </div>
+      </div>
+
+      <div class="reason-field">
+        <label for="cancel-reason">キャンセル理由（任意）</label>
+        <textarea id="cancel-reason" name="cancel-reason" maxlength="500" placeholder="差し支えなければ理由を入力してください（500文字まで）"></textarea>
       </div>
 
       <div class="button-area">
