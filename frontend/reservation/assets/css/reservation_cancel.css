@@ -117,3 +117,52 @@
     width: 100%;
   }
 }
+
+/* =========================================
+   Android / スマートフォン向け強化
+   (max-width: 480px)
+   ========================================= */
+@media (max-width: 480px) {
+
+  .cancel-page .panel {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  /* 詳細見出し */
+  .detail-heading {
+    gap: 10px;
+    padding-bottom: 18px;
+  }
+
+  .detail-heading strong {
+    font-size: 20px;
+  }
+
+  .detail-label {
+    font-size: 12px;
+  }
+
+  /* 詳細リスト */
+  .detail-item {
+    gap: 4px;
+    padding: 14px 0;
+  }
+
+  .detail-item > span:last-child {
+    font-size: 15px;
+  }
+
+  /* ボタンエリア */
+  .button-area {
+    margin-top: 20px;
+    gap: 10px;
+  }
+
+  .button-area .link-button,
+  .button-area .danger-button {
+    min-height: 52px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+}
