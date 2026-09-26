@@ -281,3 +281,88 @@ button:hover,
   }
 
 }
+
+/* =========================================
+   Android / スマートフォン向け強化
+   (max-width: 480px)
+   ========================================= */
+@media (max-width: 480px) {
+
+  /* ヘッダー */
+  .topbar-inner {
+    width: calc(100% - 24px);
+    min-height: 56px;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+
+  .brand strong {
+    font-size: 14px;
+  }
+
+  /* メインコンテンツ */
+  .main {
+    width: calc(100% - 24px);
+    padding-top: 20px;
+    padding-bottom: 88px;
+  }
+
+  /* 見出し */
+  h1 {
+    font-size: 24px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  .intro {
+    margin-bottom: 20px;
+  }
+
+  .intro p:not(.eyebrow) {
+    font-size: 13px;
+    margin-top: 6px;
+  }
+
+  /* パネル */
+  .panel {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  /* ボタン：Android タップターゲット 48px 以上 */
+  .primary {
+    min-height: 52px;
+    font-size: 15px;
+    border-radius: 12px;
+    width: 100%;
+  }
+
+  .secondary {
+    min-height: 48px;
+    font-size: 14px;
+    border-radius: 10px;
+  }
+
+  /* ボトムナビ：タップ領域を広げる */
+  .bottom-nav {
+    padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .bottom-nav-item {
+    min-width: 64px;
+    min-height: 48px;
+    font-size: 20px;
+    gap: 2px;
+  }
+
+  .bottom-nav-item small {
+    font-size: 10px;
+  }
+}

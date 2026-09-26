@@ -162,3 +162,98 @@ textarea:focus {
     width: 100%;
   }
 }
+
+/* =========================================
+   Android / スマートフォン向け強化
+   (max-width: 480px)
+   ========================================= */
+@media (max-width: 480px) {
+
+  /* パンくず */
+  .breadcrumb {
+    font-size: 12px;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  /* パネル見出し */
+  .panel-heading {
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .panel-heading h2 {
+    font-size: 17px;
+  }
+
+  .panel-heading p {
+    font-size: 13px;
+  }
+
+  /* フォームフィールド */
+  .field {
+    gap: 6px;
+  }
+
+  label {
+    font-size: 14px;
+  }
+
+  input,
+  select,
+  textarea {
+    min-height: 52px;
+    padding: 12px 14px;
+    font-size: 16px; /* iOS zoom 防止 */
+    border-radius: 10px;
+  }
+
+  textarea {
+    min-height: 100px;
+  }
+
+  .hint {
+    font-size: 12px;
+  }
+
+  .error-message {
+    font-size: 13px;
+  }
+
+  .required {
+    font-size: 12px;
+  }
+
+  /* 郵便番号行：縦並び維持 */
+  .postcode-row {
+    gap: 8px;
+  }
+
+  /* 時間セレクト */
+  .time-row {
+    gap: 6px;
+  }
+
+  .time-row select {
+    width: 90px;
+    min-height: 52px;
+    font-size: 16px;
+  }
+
+  /* フォームグリッド間隔 */
+  .form-grid {
+    gap: 16px;
+  }
+
+  /* アクションボタン */
+  .actions {
+    margin-top: 20px;
+    gap: 10px;
+  }
+
+  /* ステータスバッジ */
+  .status {
+    font-size: 12px;
+    min-height: 28px;
+  }
+}

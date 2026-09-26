@@ -81,3 +81,50 @@
     width: 100%;
   }
 }
+
+/* =========================================
+   Android / スマートフォン向け強化
+   (max-width: 480px)
+   ========================================= */
+@media (max-width: 480px) {
+
+  .cancel-complete-page .panel {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .breadcrumb {
+    font-size: 12px;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .complete-panel h1 {
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+
+  .reservation-number-box {
+    padding: 18px 16px;
+    border-radius: 12px;
+  }
+
+  .reservation-number-label {
+    font-size: 12px;
+  }
+
+  #reservation-number {
+    font-size: 22px;
+  }
+
+  .button-area {
+    margin-top: 20px;
+    gap: 10px;
+  }
+
+  .button-area .link-button {
+    min-height: 52px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+}

@@ -1,0 +1,16 @@
+# ビルド生成物
+*.iml
+.gradle/
+local.properties
+.idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+
+# 署名キー（絶対コミットしない）
+*.jks
+*.keystore
