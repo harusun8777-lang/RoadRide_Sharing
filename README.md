@@ -26,6 +26,8 @@
 │   └── Dockerfile
 ├── docs/                # 要件定義・API仕様・データモデル等の設計資料
 ├── infra/               # Azure 本番環境の Terraform（手順は infra/README.md）
+├── frontend/            # フロントエンド（静的な HTML/CSS/JS）
+├── cloudflare/          # フロントエンドを配信し /api を中継する Cloudflare Worker（手順は cloudflare/README.md）
 ├── docker-compose.yml
 └── .env.example
 ```
@@ -115,6 +117,18 @@ Bruno で試す場合は、Login リクエストで取得した `access_token` �
 docker compose down -v   # ボリュームごと削除（データも消えます）
 docker compose up --build
 ```
+
+## テスト
+
+単体テストは `tests/backend.Tests/`（xUnit）にあります。層ごとのテスト設計書は `backend/{domain,usecase,handler,infrastructure}/TESTING.md` です。
+
+```sh
+dotnet test RoadRideSharing.slnx                                   # すべて（Docker が必要）
+dotnet test RoadRideSharing.slnx --filter "Category!=Database"     # Docker なしで動くテストだけ
+```
+
+- infrastructure 層の DB テスト（`Category=Database`）は Testcontainers で SQL Server 2022 のコンテナを起動します
+- PR と main への push で GitHub Actions（`.github/workflows/test-backend.yml`）がすべてのテストを実行します
 
 ## 設計資料
 

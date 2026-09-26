@@ -153,7 +153,7 @@ public class EfReservationRepositoryTests(SqlServerFixture fixture) : IAsyncLife
 }
 ```
 
-（xUnit v2 では `InitializeAsync` / `DisposeAsync` の戻り値が `Task` になります。）
+（xUnit v2 では `InitializeAsync` / `DisposeAsync` の戻り値が `Task` になります。実装では DB の作成・削除とテストデータの保存を `Fixtures/DatabaseTestBase` にまとめ、各 DB テストクラスはそれを継承しています。予約番号は 1 日 65,536 通りで衝突しうるため、DB テストでは十分に長い一意の番号を使います。）
 
 ### この層で書かないこと
 
@@ -230,7 +230,7 @@ public class EfReservationRepositoryTests(SqlServerFixture fixture) : IAsyncLife
 | I-023 | 検証設定 | 別の鍵 | 別の 32 バイト鍵で署名したトークン | 検証失敗 | 高 |
 | I-024 | 検証設定 | 発行者違い | Issuer が別の値のトークン | 検証失敗 | 高 |
 | I-025 | 検証設定 | 対象者違い | Audience が別の値のトークン | 検証失敗 | 高 |
-| I-026 | 検証設定 | アルゴリズムの制限 | 同じ鍵で HS512 署名したトークン | 検証失敗（`ValidAlgorithms` が HS256 のみ） | 中 |
+| I-026 | 検証設定 | アルゴリズムの制限 | 同じ鍵で HS512 署名したトークン（HS512 の署名には 64 バイト以上の鍵が要るため、SigningKey を 64 バイトにして比べる。同じ条件の HS256 は成功することも確かめる） | 検証失敗（`ValidAlgorithms` が HS256 のみ） | 中 |
 | I-027 | 検証設定 | 署名なし | `alg: none` の未署名トークン | 検証失敗 | 高 |
 | I-028 | 検証設定 | 時刻のずれの許容 | `exp` が 20 秒前 / 40 秒前（`nbf` / `iat` は十分過去） | 20 秒前は成功、40 秒前は失敗（ClockSkew 30 秒） | 中 |
 | I-029 | Issue | 不正な設定で発行（`Validate` を通していない） | SigningKey が 16 バイト | 例外になる（HS256 の鍵長不足）。`Validate` が起動時に止めている前提を確かめる | 低 |
@@ -250,7 +250,7 @@ public class EfReservationRepositoryTests(SqlServerFixture fixture) : IAsyncLife
 | I-038 | Verify | 別インスタンス（シングルトン登録・再起動後を想定） | インスタンス A で Hash、B で Verify | true | 中 |
 | I-039 | Verify | 空のハッシュ | `Verify("", "password123")` | false | 中 |
 | I-040 | Verify | 再ハッシュが必要な形式 | Identity V2 形式（`PasswordHasherCompatibilityMode.IdentityV2` の `PasswordHasher` で作ったハッシュ）と正しいパスワード | true（`SuccessRehashNeeded` も成功扱い） | 低 |
-| I-041 | Verify | 不正な形式のハッシュ | Base64 でない文字列（例：`"not-a-hash"`） | 現状の挙動（例外か false か）を確かめて固定する（[5章](#5-既知の問題仕様の曖昧な点) 参照） | 低 |
+| I-041 | Verify | 不正な形式のハッシュ（現状の挙動） | Base64 でない文字列（例：`"not-a-hash"`） | false ではなく `FormatException` になる（確認済み。[5章](#5-既知の問題仕様の曖昧な点) 参照） | 低 |
 
 ### 4.4 AppDbContext のモデル定義（AppDbContextTests.Model、DB 不要）
 
@@ -288,12 +288,12 @@ public class EfReservationRepositoryTests(SqlServerFixture fixture) : IAsyncLife
 | I-064 | UTC 変換 | Unspecified の保存（現状の挙動） | `Kind = Unspecified` の値で保存 | 値はそのまま保存され、読み出すと同じ値で `Kind` が `Utc`（UTC とみなされる） | 中 |
 | I-065 | UTC 変換 | 精度 | `Ticks` の下 7 桁が 0 でない値（例：`...1234567` 100ns 単位） | `datetime2` で丸められず `Ticks` が一致 | 中 |
 | I-066 | UTC 変換 | 全 DateTime 列 | ユーザー（`created_at`、riders / drivers の `created_at`）、予約（`created_at` / `updated_at` / `cancelled_at`）、便（`created_at` / `updated_at`）を保存して読む | すべて `Kind` が `Utc` | 中 |
-| I-067 | 最大長 | 境界ちょうど | 各文字列列に最大長ちょうどの値（Theory。姓名・読み仮名は `ア` の繰り返し、メールは `a...@example.com` で 254 文字） | 保存でき、読み直して一致 | 高 |
+| I-067 | 最大長 | 境界ちょうど | 各文字列列に最大長ちょうどの値（Theory。姓名・読み仮名は `ア` の繰り返し、メールは `a...@example.com` で 254 文字。`active_role` / `status` は値変換で値が決まり超過させられないため除く） | 保存でき、読み直して一致 | 高 |
 | I-068 | 最大長 | 1 文字超過 | 各文字列列に最大長 + 1 の値（Theory） | `DbUpdateException`（内部の `SqlException.Number` が `2628`） | 高 |
 | I-069 | 最大長 | 日本語 | 乗車地に日本語 200 文字 | 保存でき、文字化けせず読み直せる（`nvarchar`） | 中 |
 | I-070 | 最大長 | サロゲートペア | 姓に `𠮷` を 25 文字（UTF-16 で 50）/ 26 文字 | 25 文字は保存でき、26 文字は `DbUpdateException`（[5章](#5-既知の問題仕様の曖昧な点) 参照） | 低 |
 | I-071 | CHECK 制約 | 乗車人数 0 | 生 SQL で `passenger_count = 0` の予約を INSERT（ドメインでは作れないため） | `SqlException.Number` が `547` | 中 |
-| I-072 | 値変換 | DB に不明な状態 | 生 SQL で `reservations.status` を `'unknown'` に更新して読む | 例外になる（`ArgumentOutOfRangeException`、または EF Core がそれを包んだ例外） | 低 |
+| I-072 | 値変換 | DB に不明な状態 | 生 SQL で `reservations.status` を `'unknown'` に更新して読む | `ArgumentOutOfRangeException`（EF Core に包まれずそのまま伝わる。確認済み） | 低 |
 | I-073 | 値変換 | DB に不明な区分（現状の挙動） | 生 SQL で `users.active_role` を `'admin'` に更新して読む | 例外にならず `ActiveRole` が `Rider` | 低 |
 | I-074 | 一意制約 | 便番号の重複 | 同じ `GroupNumber` の便を 2 件保存 | `DbUpdateException`（`2601`） | 低 |
 | I-075 | 外部キー | 運転手でないユーザーの便 | Rider だけのユーザーを `DriverId` にした便を保存 | `DbUpdateException`（`547`） | 低 |
@@ -317,7 +317,7 @@ public class EfReservationRepositoryTests(SqlServerFixture fixture) : IAsyncLife
 | I-088 | UpdateAsync | 追跡中・区分の追加 | `FindByIdAsync` で取得（追跡中）→ `AddRole(Driver)` → `UpdateAsync` | `drivers` に行が追加され、別コンテキストで読むと `HasRole(Driver)` が true | 高 |
 | I-089 | UpdateAsync | 追跡中・区分の切り替え | 両プロフィールを持つユーザーを取得 → `SwitchRole(Driver)` → `UpdateAsync` | 生 SQL で `active_role` が `driver`、読み直すと `ActiveRole` が `Driver` | 高 |
 | I-090 | UpdateAsync | 切り離された状態・切り替え | コンテキスト A で取得した両プロフィールのユーザーを `SwitchRole` し、コンテキスト B のリポジトリで `UpdateAsync` | 保存される | 中 |
-| I-091 | UpdateAsync | 切り離された状態・区分の追加 | コンテキスト A で取得した Rider だけのユーザーに `AddRole(Driver)` し、コンテキスト B で `UpdateAsync` | 現状の挙動を確かめて固定する（新しい `Driver` が更新扱いになり `DbUpdateConcurrencyException` になる可能性。[5章](#5-既知の問題仕様の曖昧な点) 参照） | 中 |
+| I-091 | UpdateAsync | 切り離された状態・区分の追加（現状の挙動） | コンテキスト A で取得した Rider だけのユーザーに `AddRole(Driver)` し、コンテキスト B で `UpdateAsync` | 新しい `Driver` が更新扱いになり `DbUpdateConcurrencyException`、`drivers` は 0 行のまま（確認済み。[5章](#5-既知の問題仕様の曖昧な点) 参照） | 中 |
 
 ### 4.7 EfReservationRepository（EfReservationRepositoryTests）
 
@@ -363,7 +363,7 @@ public class EfReservationRepositoryTests(SqlServerFixture fixture) : IAsyncLife
 | I-115 | ListAsync | From / To の Kind が Local | `DateTimeOffset(2026-10-01 09:00 +09:00).LocalDateTime` を `From` に指定 | `2026-10-01T00:00:00Z` 以降の予約が返る（パラメータにも UTC 変換が効く） | 中 |
 | I-116 | ListAsync | From / To の Kind が Unspecified（現状の挙動） | `Kind = Unspecified` の `2026-10-01T00:00:00` を `From` に指定 | UTC の `2026-10-01T00:00:00Z` 以降として扱われる | 低 |
 | I-117 | ListAsync | From が To より後 | `From = 10/2`、`To = 10/1` | 0 件、`Total` が 0（例外にならない） | 中 |
-| I-118 | ListAsync | 条件の組み合わせ | `UserId`・`Date`・`Status`・`From`・`To` をすべて指定し、各条件だけ外れる予約を用意 | すべて満たす予約だけ（AND） | 中 |
+| I-118 | ListAsync | 条件の組み合わせ | `UserId`・`Date`・`Status`・`From`・`To` をすべて指定し、各条件だけ外れる予約を用意。From / To を日付の中に置くと「日付だけ外れる」予約を作れないため、To を日付の中に置く条件と日付の外に置く条件の 2 回で確かめる | すべて満たす予約だけ（AND） | 中 |
 | I-119 | ListAsync | 該当なし | 条件に合う予約がない | `Items` が空、`Total` が 0 | 中 |
 | I-120 | ListAsync | 並び順 | 希望乗車日時がばらばらの予約を、日時と逆順に保存 | `RequestedPickupAt` の昇順 | 高 |
 | I-121 | ListAsync | 同時刻の並び順 | 同じ `RequestedPickupAt` の予約 5 件 | `Id` の SQL Server 上の昇順（期待値は `SqlGuid` の比較で求める）。同じ条件で 2 回呼んでも同じ順 | 中 |
@@ -373,7 +373,7 @@ public class EfReservationRepositoryTests(SqlServerFixture fixture) : IAsyncLife
 | I-125 | ListAsync | limit の補正 | 51 件、`Limit = 0` / `-1`（Theory） | 50 件、`Total` が 51 | 高 |
 | I-126 | ListAsync | limit の上限なし（現状の挙動） | 60 件、`Limit = 1000` | 60 件すべて | 中 |
 | I-127 | ListAsync | 既定値 | `new ReservationListFilter()` | `Page = 1`、`Limit = 50` として全ユーザーから返る | 中 |
-| I-128 | ListAsync | 非常に大きい page | `Page = int.MaxValue`、`Limit = 50` | 現状の挙動（空か例外か）を確かめて固定する（[5章](#5-既知の問題仕様の曖昧な点) 参照） | 低 |
+| I-128 | ListAsync | 非常に大きい page（現状の挙動） | `Page = int.MaxValue`、`Limit = 50` | `(page - 1) * limit` がオーバーフローして負になり、`SqlException`（`Number` が `10742`：OFFSET に負の値）がそのまま伝わる（確認済み。[5章](#5-既知の問題仕様の曖昧な点) 参照） | 低 |
 | I-129 | ListAsync | 追跡しない | 一覧取得後の `db.ChangeTracker.Entries()` | 空（`AsNoTracking`） | 低 |
 
 ### 4.8 EfRideGroupRepository（EfRideGroupRepositoryTests）
@@ -400,7 +400,7 @@ public class EfReservationRepositoryTests(SqlServerFixture fixture) : IAsyncLife
 | I-140 | CheckHealthAsync | 例外 | `Dispose` 済みの `AppDbContext`（`ObjectDisposedException` が起きる） | `Unhealthy`、`Description` が `データベースに接続できません`、`Exception` が null、`Description` に接続文字列やサーバー名を含まない | 高 |
 | I-141 | CheckHealthAsync | 例外のログ | I-140 と同じ | `RecordingLogger` に `LogLevel.Error` のログが 1 件、例外オブジェクト付きで記録される | 中 |
 | I-142 | CheckHealthAsync | 接続できないときのログ | I-138 と同じ | `CanConnectAsync` が false を返した経路ではログを出さない（現状の挙動） | 低 |
-| I-143 | CheckHealthAsync | キャンセル（現状の挙動） | キャンセル済みの `CancellationToken` | `OperationCanceledException` が伝わらず `Unhealthy` が返る（[5章](#5-既知の問題仕様の曖昧な点) 参照） | 低 |
+| I-143 | CheckHealthAsync | キャンセル（現状の挙動） | キャンセル済みの `CancellationToken` | `OperationCanceledException` が伝わらず `Unhealthy` が返り、`OperationCanceledException` 付きの Error ログが 1 件出る（確認済み。[5章](#5-既知の問題仕様の曖昧な点) 参照） | 低 |
 
 I-138 と I-139 は Docker を使わない経路もありますが、ネットワーク待ちがあるため `Database` カテゴリに入れます。
 
@@ -416,16 +416,16 @@ I-138 と I-139 は Docker を使わない経路もありますが、ネット�
 | 4 | `DateTimeKind.Unspecified` の値は変換されずにそのまま保存され、読み出すと UTC 扱いになる。`from` / `to` をタイムゾーンなしで受けた場合や、`requested_pickup_at` をタイムゾーンなしで登録した場合は UTC とみなされる（日本時間のつもりなら 9 時間ずれる）。仕様どおりかは要確認 | I-064, I-116 |
 | 5 | `Local` の値の変換はテストを動かすホストのタイムゾーンに依存する。GitHub Actions などホストが UTC の環境では I-063 / I-115 が変換なしでも通ってしまうため、CI では環境変数 `TZ=Asia/Tokyo` を付けてテストプロセスを起動するのが望ましい | I-063, I-115 |
 | 6 | 一覧の `date` は半開区間（JST の 0:00 以上 24:00 未満）、`to` は以下（含む）。`docs/ENDPOINT.md` の「以前」とは一致しているが、`date` と `to` で境界の考え方が違う | I-111, I-113, I-114 |
-| 7 | `Skip((page - 1) * limit)` は `int` のまま掛け算するため、`page` が非常に大きいとオーバーフローして負の値になり、SQL Server の `OFFSET` がエラーになる可能性がある。`limit` にも上限がない（`docs/ENDPOINT.md` の「既知の制約」と同じ） | I-126, I-128 |
+| 7 | `Skip((page - 1) * limit)` は `int` のまま掛け算するため、`page` が非常に大きいとオーバーフローして負の値になり、SQL Server の `OFFSET` がエラー（`10742`）になる（I-128 で確認済み。handler で page を制限しなければ 500 になる）。`limit` にも上限がない（`docs/ENDPOINT.md` の「既知の制約」と同じ） | I-126, I-128 |
 | 8 | 同時刻の並び順は `Id`（`uniqueidentifier`）で決まるが、SQL Server の `uniqueidentifier` の大小は .NET の `Guid.CompareTo` と異なる（末尾のバイトから比べる）。テストの期待値を .NET 側で並べ替えて作ると誤る。利用者から見た同時刻の順は実質ランダム | I-121 |
-| 9 | `UpdateAsync` は切り離された状態のエンティティに `Update()` を使う。`Update()` はキーが設定済みのエンティティをすべて「更新」扱いにするため、`AddRole` で新しく作った `Rider` / `Driver` も INSERT されず UPDATE（0 行）になり、`DbUpdateConcurrencyException` になる可能性がある。今のユースケースは同じスコープで `FindByIdAsync` した追跡中のエンティティを渡すので表に出ない | I-088, I-091 |
+| 9 | `UpdateAsync` は切り離された状態のエンティティに `Update()` を使う。`Update()` はキーが設定済みのエンティティをすべて「更新」扱いにするため、`AddRole` で新しく作った `Rider` / `Driver` も INSERT されず UPDATE（0 行）になり、`DbUpdateConcurrencyException` になる（I-091 で確認済み）。今のユースケースは同じスコープで `FindByIdAsync` した追跡中のエンティティを渡すので表に出ない | I-088, I-091 |
 | 10 | `SaveChangesAsync` が失敗しても、失敗したエンティティは追跡から外れない。同じ `DbContext` を使い続けると次の保存でも同じエラーになる。今はリクエストごとにスコープが終わるので影響は小さい | I-087 |
 | 11 | 区分の値変換は `"driver"` 以外をすべて `Rider` として読む（大文字の `"Driver"` も）。状態の値変換は不明な値で例外になるので扱いが非対称。DB に `status` / `active_role` の CHECK 制約はない | I-052, I-072, I-073 |
 | 12 | `RideGroup` には状態を変えるメソッドがなく、`IRideGroupRepository` にも追加・更新のメソッドがない。テストデータは `DbContext` を直接使って作るしかない | I-130〜I-136 |
 | 13 | `JwtOptions.Validate` は SigningKey のバイト数だけを見るので、空白だけの鍵も通る。SigningKey に null を代入した場合は `InvalidOperationException` ではなく `ArgumentNullException` になる（設定ファイルからのバインドでは通常空文字になる）。`JwtAccessTokenIssuer` 自身は `Validate` を呼ばない | I-013, I-029 |
 | 14 | `JwtAccessTokenIssuer` は `DateTime.UtcNow` を直接使うので時刻を固定できない。また `exp` は秒単位に切り捨てられるため、レスポンスの `expires_at` はトークンの `exp` より最大 1 秒遅い | I-018, I-020 |
-| 15 | `AspNetPasswordHasher.Verify` は `SuccessRehashNeeded` も成功とし、再ハッシュして保存し直す仕組みはない。不正な形式のハッシュを渡したときに例外になるか false になるかは `PasswordHasher` の実装次第で、例外ならログインが 500 になる | I-040, I-041 |
-| 16 | `DatabaseHealthCheck` は `catch (Exception)` でキャンセル（`OperationCanceledException`）も `Unhealthy` に変える。また本番は `EnableRetryOnFailure` 付きなので、DB に届かないときに `/health` の応答まで時間がかかる可能性がある（要確認） | I-143 |
+| 15 | `AspNetPasswordHasher.Verify` は `SuccessRehashNeeded` も成功とし、再ハッシュして保存し直す仕組みはない。不正な形式（Base64 でない）のハッシュを渡すと false ではなく `FormatException` になる（I-041 で確認済み）。DB のハッシュが壊れているとログインが 500 になる | I-040, I-041 |
+| 16 | `DatabaseHealthCheck` は `catch (Exception)` でキャンセル（`OperationCanceledException`）も `Unhealthy` に変え、Error ログも出す（I-143 で確認済み）。また本番は `EnableRetryOnFailure` 付きなので、DB に届かないときに `/health` の応答まで時間がかかる可能性がある（要確認） | I-143 |
 | 17 | `docs/DATA_MODEL.md` の ER 図にある `users.updated_at` や、`ride_groups` の `vehicle_id` / `planned_departure_at` などはマッピングされていない。テストは今のコード（`AppDbContext`）を正とする | I-042〜I-050 |
 | 18 | スキーマは `EnsureCreated` で作っている（マイグレーション未導入）。マイグレーションを入れたら、テストの DB 作成も `MigrateAsync` に切り替える | I-059 |
 
