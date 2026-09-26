@@ -1,0 +1,833 @@
+openapi: 3.0.3
+info:
+  title: RoadRide Sharing API
+  version: 0.1.0
+  description: |
+    地域AI乗り合い交通サービス RoadRide Sharing のバックエンド API（実装済みのエンドポイントのみ）。
+
+    - JSON のキーはスネークケース。日時は ISO 8601 形式で、レスポンスは UTC で返す
+    - `/api/users`（登録）、`/api/auth/login`、`/health` 以外は JWT（`Authorization: Bearer <token>`）が必要
+    - 予約は自分のものだけを扱う。他人の予約IDを指定した場合は存在しない場合と同じく 404 を返す
+
+    説明付きの一覧は [ENDPOINT.md](ENDPOINT.md) を参照。
+servers:
+  - url: http://localhost:8080
+    description: ローカル
+  - url: https://ca-rideshare-backend.delightfulsea-b341bdde.japaneast.azurecontainerapps.io
+    description: 本番（Azure Container Apps）
+tags:
+  - name: health
+    description: ヘルスチェック
+  - name: auth
+    description: 認証
+  - name: users
+    description: ユーザー
+  - name: reservations
+    description: 予約
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags: [health]
+      operationId: getHealth
+      summary: サーバーと DB の稼働確認
+      description: "共通のレスポンス形式ではなく、ヘルスチェック専用の形式で返す。`Cache-Control: no-store` を付ける。"
+      security: []
+      responses:
+        "200":
+          description: すべて正常
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: Healthy
+                checks:
+                  database:
+                    status: Healthy
+                    description: null
+        "503":
+          description: DB に接続できないなど、どれかのチェックが異常
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: Unhealthy
+                checks:
+                  database:
+                    status: Unhealthy
+                    description: データベースに接続できません
+
+  /api/auth/login:
+    post:
+      tags: [auth]
+      operationId: login
+      summary: ログイン（JWT の発行）
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              email: taro.yamada@example.com
+              password: password1234
+      responses:
+        "200":
+          description: ログイン成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/LoginResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: メールアドレスが未登録、パスワードが違う、またはどちらかが空（原因は区別しない）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: INVALID_CREDENTIALS
+                  message: メールアドレスまたはパスワードが正しくありません
+
+  /api/users:
+    post:
+      tags: [users]
+      operationId: registerUser
+      summary: 利用者登録
+      description: |
+        指定した区分が、登録済みの区分かつ稼働中の区分になる。トークンは発行しないので、続けてログインする。
+        チェックは role → password → メールアドレスの重複 → 氏名 → 読み仮名 の順に行い、最初のエラーだけを返す。
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterUserRequest"
+      responses:
+        "201":
+          description: 登録成功
+          headers:
+            Location:
+              description: "`/api/users/me`"
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDataResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: メールアドレスが登録済み
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: CONFLICT
+                  message: このメールアドレスはすでに登録されています
+        "422":
+          description: |
+            入力値が不正。`details[].field` は `role` / `password` / `email` / `lastName` / `firstName` / `kanaLastName` / `kanaFirstName`。
+            `role` 以外のメッセージは英語。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                role:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: 入力内容を確認してください
+                      details:
+                        - field: role
+                          message: 利用者区分の値が不正です
+                kana:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: 入力内容を確認してください
+                      details:
+                        - field: kanaLastName
+                          message: kanaLastName must be full-width katakana. (Parameter 'kanaLastName')
+
+  /api/users/me:
+    get:
+      tags: [users]
+      operationId: getMe
+      summary: 自分のユーザー情報を取得
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDataResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/users/me/roles:
+    post:
+      tags: [users]
+      operationId: addUserRole
+      summary: 利用者区分を追加
+      description: 区分を追加するだけで、稼働中の区分（active_role）は変わらない。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRoleRequest"
+            example:
+              role: driver
+      responses:
+        "200":
+          description: 追加成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDataResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: その区分はすでに登録済み
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: CONFLICT
+                  message: この利用者区分は登録済みです
+        "422":
+          $ref: "#/components/responses/InvalidRole"
+
+  /api/users/me/active-role:
+    put:
+      tags: [users]
+      operationId: switchUserRole
+      summary: 稼働中の利用者区分を切り替え
+      description: |
+        同時に稼働できる区分は 1 つだけ。今の区分で完了・キャンセルになっていない予約（利用者）や運行（運転手）が残っている場合は切り替えられない。
+        今と同じ区分を指定した場合は何も変えずに成功する。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRoleRequest"
+            example:
+              role: driver
+      responses:
+        "200":
+          description: 切り替え成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDataResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: 未完了の予約・運行がある、または切り替え先の区分が未登録
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                unfinishedReservation:
+                  value:
+                    error:
+                      code: CONFLICT
+                      message: 完了またはキャンセルされていない予約があるため切り替えできません
+                unfinishedRideGroup:
+                  value:
+                    error:
+                      code: CONFLICT
+                      message: 完了またはキャンセルされていない運行があるため切り替えできません
+                notRegistered:
+                  value:
+                    error:
+                      code: CONFLICT
+                      message: この利用者区分は登録されていません
+        "422":
+          $ref: "#/components/responses/InvalidRole"
+
+  /api/reservations:
+    post:
+      tags: [reservations]
+      operationId: registerReservation
+      summary: 予約を登録
+      description: 稼働中の区分が rider であること。登録直後の状態は matching。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterReservationRequest"
+            example:
+              pickup_location: 市役所前
+              destination: 中央病院
+              requested_pickup_at: "2026-10-01T09:00:00+09:00"
+              passenger_count: 2
+              consideration_notes: 車椅子を使用
+      responses:
+        "201":
+          description: 登録成功
+          headers:
+            Location:
+              description: "`/api/reservations/{id}`"
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationDataResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: 稼働中の区分が rider ではない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: CONFLICT
+                  message: 利用者として稼働していないため予約できません
+        "422":
+          description: 入力値が不正。`details[].field` は `pickupLocation` / `destination` / `passengerCount`。メッセージは英語。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: 入力内容を確認してください
+                  details:
+                    - field: passengerCount
+                      message: PassengerCount must be 1 or more. (Parameter 'passengerCount')
+    get:
+      tags: [reservations]
+      operationId: listReservations
+      summary: 自分の予約一覧を取得
+      description: 希望乗車日時の昇順で返す。
+      parameters:
+        - name: date
+          in: query
+          description: 乗車日で絞り込む。日本時間の 0:00〜24:00 として扱う
+          schema:
+            type: string
+            format: date
+          example: "2026-10-01"
+        - name: status
+          in: query
+          description: 予約状態で絞り込む
+          schema:
+            $ref: "#/components/schemas/ReservationStatus"
+        - name: from
+          in: query
+          description: 希望乗車日時がこの日時以降
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          description: 希望乗車日時がこの日時以前
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          description: ページ番号（1 未満は 1 として扱う）
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: 1 ページの件数（1 未満は 50 として扱う。上限なし）
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          description: status が定義外の値
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: 入力内容を確認してください
+                  details:
+                    - field: status
+                      message: 予約状態の値が不正です
+
+  /api/reservations/{reservationId}:
+    get:
+      tags: [reservations]
+      operationId: getReservation
+      summary: 自分の予約の詳細を取得
+      parameters:
+        - $ref: "#/components/parameters/ReservationId"
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationDataResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ReservationNotFound"
+
+  /api/reservations/{reservationId}/cancel:
+    post:
+      tags: [reservations]
+      operationId: cancelReservation
+      summary: 自分の予約をキャンセル
+      description: キャンセルできるのは matching か confirmed の予約だけ。ボディは必須（理由がなくても `{}` を送る）。
+      parameters:
+        - $ref: "#/components/parameters/ReservationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelReservationRequest"
+            example:
+              reason: 予定が変わったため
+      responses:
+        "200":
+          description: キャンセル成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/CancelReservationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ReservationNotFound"
+        "409":
+          description: in_progress / completed / cancelled の予約（メッセージは英語）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: CONFLICT
+                  message: Cannot cancel a reservation in status Cancelled.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: POST /api/auth/login で受け取った access_token。有効期限は 60 分
+
+  parameters:
+    ReservationId:
+      name: reservationId
+      in: path
+      required: true
+      description: 予約ID。UUID 形式でない場合はルートに一致せず 404（本文なし）
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    BadRequest:
+      description: JSON の形式が不正、必須のボディがない、クエリの型が不正（本文なし）
+    Unauthorized:
+      description: トークンがない・不正・期限切れ、またはトークンのユーザーが存在しない（本文なし）
+    InvalidRole:
+      description: role が rider / driver 以外
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: VALIDATION_ERROR
+              message: 入力内容を確認してください
+              details:
+                - field: role
+                  message: 利用者区分の値が不正です
+    ReservationNotFound:
+      description: 予約が存在しない、または他人の予約
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: NOT_FOUND
+              message: 指定された予約が見つかりません
+
+  schemas:
+    # ---- 共通 ----
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum: [VALIDATION_ERROR, INVALID_CREDENTIALS, NOT_FOUND, CONFLICT]
+            message:
+              type: string
+            details:
+              type: array
+              description: VALIDATION_ERROR のときだけ付く
+              items:
+                type: object
+                required: [field, message]
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+
+    PageMeta:
+      type: object
+      required: [page, limit, total]
+      properties:
+        page:
+          type: integer
+          description: リクエストした page（補正前の値）
+        limit:
+          type: integer
+          description: リクエストした limit（補正前の値）
+        total:
+          type: integer
+          description: 絞り込み後の全件数
+
+    HealthResponse:
+      type: object
+      required: [status, checks]
+      properties:
+        status:
+          type: string
+          enum: [Healthy, Degraded, Unhealthy]
+        checks:
+          type: object
+          additionalProperties:
+            type: object
+            required: [status]
+            properties:
+              status:
+                type: string
+                enum: [Healthy, Degraded, Unhealthy]
+              description:
+                type: string
+                nullable: true
+
+    # ---- 認証 ----
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          description: 前後の空白は無視
+        password:
+          type: string
+          format: password
+
+    LoginResponse:
+      type: object
+      required: [access_token, token_type, expires_at]
+      properties:
+        access_token:
+          type: string
+          description: JWT（HS256）
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_at:
+          type: string
+          format: date-time
+          description: 有効期限（UTC）
+
+    # ---- ユーザー ----
+    UserRole:
+      type: string
+      enum: [rider, driver]
+      description: rider = 利用者、driver = 運転手
+
+    RegisterUserRequest:
+      type: object
+      required: [email, password, last_name, first_name, kana_last_name, kana_first_name, role]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          description: 前後の空白は除去
+          example: taro.yamada@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+          example: password1234
+        last_name:
+          type: string
+          maxLength: 50
+          example: 山田
+        first_name:
+          type: string
+          maxLength: 50
+          example: 太郎
+        kana_last_name:
+          type: string
+          maxLength: 50
+          pattern: "^[ァ-ヶー]+$"
+          description: 全角カタカナと長音符のみ
+          example: ヤマダ
+        kana_first_name:
+          type: string
+          maxLength: 50
+          pattern: "^[ァ-ヶー]+$"
+          description: 全角カタカナと長音符のみ
+          example: タロウ
+        role:
+          $ref: "#/components/schemas/UserRole"
+
+    UserRoleRequest:
+      type: object
+      required: [role]
+      properties:
+        role:
+          $ref: "#/components/schemas/UserRole"
+
+    User:
+      type: object
+      required: [id, email, last_name, first_name, kana_last_name, kana_first_name, active_role, roles, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        last_name:
+          type: string
+        first_name:
+          type: string
+        kana_last_name:
+          type: string
+        kana_first_name:
+          type: string
+        active_role:
+          $ref: "#/components/schemas/UserRole"
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserRole"
+        created_at:
+          type: string
+          format: date-time
+      example:
+        id: 3f2b8c1e-5d4a-4e7b-9c1f-2a6d8e0b4c71
+        email: taro.yamada@example.com
+        first_name: 太郎
+        last_name: 山田
+        kana_first_name: タロウ
+        kana_last_name: ヤマダ
+        active_role: rider
+        roles: [rider]
+        created_at: "2026-09-26T05:00:00Z"
+
+    UserDataResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/User"
+
+    # ---- 予約 ----
+    ReservationStatus:
+      type: string
+      enum: [matching, confirmed, in_progress, completed, cancelled]
+      description: matching = マッチング中、confirmed = 確定、in_progress = 乗車中、completed = 完了、cancelled = キャンセル
+
+    RegisterReservationRequest:
+      type: object
+      required: [pickup_location, destination, requested_pickup_at, passenger_count]
+      properties:
+        pickup_location:
+          type: string
+          maxLength: 200
+        destination:
+          type: string
+          maxLength: 200
+        requested_pickup_at:
+          type: string
+          format: date-time
+          description: タイムゾーン付きで送ること
+        passenger_count:
+          type: integer
+          minimum: 1
+        consideration_notes:
+          type: string
+          maxLength: 500
+          nullable: true
+
+    CancelReservationRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+          nullable: true
+
+    Reservation:
+      type: object
+      required:
+        - id
+        - reservation_number
+        - user_id
+        - pickup_location
+        - destination
+        - requested_pickup_at
+        - passenger_count
+        - consideration_notes
+        - status
+        - cancellation_reason
+        - cancelled_at
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        reservation_number:
+          type: string
+          description: RR-yyyyMMdd-XXXX（日付は UTC）
+          example: RR-20260926-A1B2
+        user_id:
+          type: string
+          format: uuid
+        pickup_location:
+          type: string
+        destination:
+          type: string
+        requested_pickup_at:
+          type: string
+          format: date-time
+        passenger_count:
+          type: integer
+        consideration_notes:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/ReservationStatus"
+        cancellation_reason:
+          type: string
+          nullable: true
+        cancelled_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    ReservationDataResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Reservation"
+
+    ReservationSummary:
+      type: object
+      required: [id, reservation_number, pickup_location, destination, requested_pickup_at, passenger_count, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        reservation_number:
+          type: string
+        pickup_location:
+          type: string
+        destination:
+          type: string
+        requested_pickup_at:
+          type: string
+          format: date-time
+        passenger_count:
+          type: integer
+        status:
+          $ref: "#/components/schemas/ReservationStatus"
+
+    ReservationListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReservationSummary"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+
+    CancelReservationResponse:
+      type: object
+      required: [id, status, cancellation_reason, cancelled_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/ReservationStatus"
+        cancellation_reason:
+          type: string
+          nullable: true
+        cancelled_at:
+          type: string
+          format: date-time

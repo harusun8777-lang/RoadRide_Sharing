@@ -102,6 +102,7 @@ docker compose up --build
 
 - [要件定義書](docs/requirements.md)
 - [API仕様書](docs/api-specification.md)
+- [エンドポイント一覧（実装済み）](docs/ENDPOINT.md) / [OpenAPI 定義（Swagger）](docs/swagger.yaml)
 - [データモデル](docs/data-model.md)
 - [画面遷移](docs/screen-transition.md)
 - [UIデザインガイドライン](docs/ui-design-guidelines.md)
