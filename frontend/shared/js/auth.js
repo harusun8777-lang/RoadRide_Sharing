@@ -151,7 +151,8 @@ const RoadRideAuth = (() => {
     const firstFieldMessage = Object.values(fieldErrors)[0];
     // CONFLICT などのメッセージは日本語で返るものが多いが、英語のもの（例：キャンセル不可）は使わない
     const apiMessage = error?.message && /[぀-ヿ一-鿿]/.test(error.message) ? error.message : "";
-    const message = firstFieldMessage || apiMessage || fallbackMessage || STATUS_MESSAGES[status]
+    // 優先順位: 項目ごとのメッセージ → 画面が指定した文言（errorMessages） → API の日本語メッセージ → ステータスごとの既定
+    const message = firstFieldMessage || fallbackMessage || apiMessage || STATUS_MESSAGES[status]
       || (status >= 500 ? "サーバーでエラーが発生しました。時間をおいて再度お試しください。" : "処理に失敗しました。");
 
     return new ApiError(message, { status, code: error?.code || "", fieldErrors });
@@ -238,7 +239,16 @@ const RoadRideAuth = (() => {
       },
       errorMessages: { 409: "このメールアドレスはすでに登録されています。" }
     });
-    await login(email, password);
+
+    try {
+      await login(email, password);
+    } catch (error) {
+      // アカウントは作成済みなので、登録の失敗と区別できるようにする（同じ内容で送り直すと 409 になるため）
+      throw new ApiError("登録は完了しましたが、ログインできませんでした。ログイン画面からログインしてください。", {
+        status: error.status ?? 0,
+        code: "REGISTERED_BUT_LOGIN_FAILED"
+      });
+    }
     return payload.data;
   }
 
