@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>配車詳細・運行状態更新 | RoadRide Sharing</title>
+  <link rel="stylesheet" href="../assets/css/app.css">
+  <link rel="stylesheet" href="../assets/css/reservation-detail.css">
+  <link rel="stylesheet" href="../../reservation/assets/css/account.css">
+  <script src="../../reservation/assets/js/account.js" defer></script>
+</head>
+
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-inner">
+        <a class="brand" href="reservations.html" aria-label="予約一覧へ戻る">
+          <span class="brand-mark">RR</span>
+          <span>
+            <strong>RoadRide Sharing</strong>
+            <small>配車管理</small>
+          </span>
+        </a>
+        <div class="header-actions">
+          <a class="header-nav-link" href="ai-candidates.html">AI配車候補</a>
+          <a class="header-nav-link" href="manual-dispatch.html">手動配車</a>
+          <a class="back-link" href="reservations.html">← 予約一覧</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="breadcrumb">
+        <a href="reservations.html">予約一覧</a>
+        <span>›</span>
+        <a href="ai-candidates.html">AI配車候補</a>
+        <span>›</span>
+        <strong>配車詳細・運行状態更新</strong>
+      </div>
+
+      <section class="page-heading">
+        <div>
+          <p class="eyebrow">DISPATCH DETAIL</p>
+          <h1>配車詳細・運行状態更新</h1>
+          <p class="page-description">AI候補または手動配車で確定した内容を確認し、運行状態を更新します。</p>
+        </div>
+        <span class="status status-success" id="status-badge">予約確定</span>
+      </section>
+
+      <div class="notice" id="notice" role="status">
+        <span class="notice-icon">i</span>
+        <div>
+          <strong id="notice-title">配車内容を確認しました</strong>
+          <p id="notice-message">次の状態に進めるか、必要に応じてキャンセルを行ってください。</p>
+        </div>
+      </div>
+
+      <div class="detail-layout">
+        <section class="content-column">
+          <article class="panel reservation-card">
+            <div class="card-heading">
+              <div>
+                <p class="label">配車グループ</p>
+                <h2 id="reservation-number">RR-20260921-0001</h2>
+              </div>
+              <button class="copy-button" id="copy-button" type="button">番号をコピー</button>
+            </div>
+            <dl class="info-grid">
+              <div class="info-item highlight">
+                <dt>希望乗車日</dt>
+                <dd id="reservation-date">9月21日（月）</dd>
+              </div>
+              <div class="info-item highlight">
+                <dt>出発予定時刻</dt>
+                <dd id="reservation-time">9:55</dd>
+              </div>
+              <div class="info-item">
+                <dt>利用者</dt>
+                <dd id="reservation-user">佐藤 由美</dd>
+              </div>
+              <div class="info-item">
+                <dt>乗車人数</dt>
+                <dd id="reservation-passengers">2名</dd>
+              </div>
+              <div class="info-item">
+                <dt>車両</dt>
+                <dd id="vehicle-name">乗合タクシー 1号車</dd>
+              </div>
+              <div class="info-item">
+                <dt>料金目安</dt>
+                <dd id="fare-estimate">800円</dd>
+              </div>
+            </dl>
+          </article>
+
+          <article class="panel route-card">
+            <div class="card-heading">
+              <div>
+                <p class="eyebrow">TRIP ROUTE</p>
+                <h2>乗車ルート</h2>
+              </div>
+              <span class="route-time" id="route-duration">約25分</span>
+            </div>
+            <div class="route-line">
+              <div class="route-point pickup-point">
+                <span class="point-icon">●</span>
+                <div>
+                  <span class="route-label">乗車場所</span>
+                  <strong id="pickup-location">電波学園前</strong>
+                </div>
+              </div>
+              <div class="route-connector"><span></span></div>
+              <div class="route-point destination-point">
+                <span class="point-icon">◆</span>
+                <div>
+                  <span class="route-label">目的地</span>
+                  <strong id="destination-location">市役所</strong>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel confirmation-card" id="confirmed-details">
+            <div class="card-heading">
+              <div>
+                <p class="eyebrow">CONFIRMED PLAN</p>
+                <h2>確定した配車内容</h2>
+              </div>
+              <span class="status status-success">配車確定</span>
+            </div>
+            <dl class="info-grid">
+              <div class="info-item">
+                <dt>乗車順</dt>
+                <dd id="rider-order">佐藤 由美 → 鈴木 一郎</dd>
+              </div>
+              <div class="info-item">
+                <dt>出発予定</dt>
+                <dd id="confirmed-departure">9:55</dd>
+              </div>
+              <div class="info-item">
+                <dt>グループ条件</dt>
+                <dd id="group-condition">定員内 / 配慮事項確認済み</dd>
+              </div>
+              <div class="info-item">
+                <dt>連携元</dt>
+                <dd id="source-label">AI配車候補</dd>
+              </div>
+            </dl>
+          </article>
+
+          <article class="panel history-card">
+            <div class="card-heading">
+              <div>
+                <p class="eyebrow">ACTIVITY</p>
+                <h2>変更履歴</h2>
+              </div>
+            </div>
+            <ol class="timeline">
+              <li class="timeline-item is-current">
+                <span class="timeline-dot"></span>
+                <div>
+                  <strong>配車内容を確定しました</strong>
+                  <time>2026年9月20日 12:05</time>
+                </div>
+              </li>
+              <li class="timeline-item">
+                <span class="timeline-dot"></span>
+                <div>
+                  <strong>候補確認または手動配車が完了しました</strong>
+                  <time>2026年9月20日 12:06</time>
+                </div>
+              </li>
+              <li class="timeline-item is-pending">
+                <span class="timeline-dot"></span>
+                <div>
+                  <strong>運行状態の更新待ち</strong>
+                  <time>状態変更を選択してください</time>
+                </div>
+              </li>
+            </ol>
+          </article>
+        </section>
+
+        <aside class="side-column">
+          <section class="panel action-card">
+            <h2>配車操作</h2>
+            <p>確定した配車内容を確認し、運行開始または完了を登録します。</p>
+            <button class="button button-primary" id="primary-action-button" type="button">利用者へ確定内容を通知</button>
+            <button class="button button-danger" id="cancel-button" type="button">キャンセル</button>
+          </section>
+
+          <section class="panel support-card">
+            <span class="support-icon">?</span>
+            <div>
+              <h2>確認ポイント</h2>
+              <p>定員、配慮事項、乗車順を確認してから運行状態を更新してください。</p>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <nav class="bottom-nav" aria-label="メインメニュー">
+      <a class="bottom-nav-item" href="dashboard.html"><span>⌂</span><small>ダッシュボード</small></a>
+      <a class="bottom-nav-item" href="reservations.html"><span>▦</span><small>予約一覧</small></a>
+      <a class="bottom-nav-item" href="reservations.html?status=in_progress"><span>◷</span><small>運行状況</small></a>
+    </nav>
+  </div>
+  <script src="../assets/js/dispatch-detail.js"></script>
+</body>
+
+</html>
