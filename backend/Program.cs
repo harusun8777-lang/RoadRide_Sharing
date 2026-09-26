@@ -1,8 +1,10 @@
 using Handler.Auth;
+using Handler.Health;
 using Handler.Reservations;
 using Handler.Users;
 using Infrastructure;
 using Infrastructure.Auth;
+using Infrastructure.Health;
 using Infrastructure.Reservations;
 using Infrastructure.RideGroups;
 using Infrastructure.Users;
@@ -36,6 +38,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         sql => sql.EnableRetryOnFailure()));
+
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>("database");
 
 builder.Services.AddScoped<IReservationRepository, EfReservationRepository>();
 builder.Services.AddScoped<RegisterReservationUseCase>();
@@ -80,28 +85,6 @@ apiGroup.MapAuthEndpoints();
 apiGroup.MapReservationEndpoints();
 apiGroup.MapUserEndpoints();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.MapHealthEndpoints();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

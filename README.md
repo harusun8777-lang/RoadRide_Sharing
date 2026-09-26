@@ -46,7 +46,8 @@ cp .env.example .env        # 必要に応じて MSSQL_SA_PASSWORD を変更
 docker compose up --build
 ```
 
-- API: http://localhost:5087
+- API: http://localhost:8080
+- ヘルスチェック: http://localhost:8080/health（認証不要。DB に接続できれば 200、できなければ 503）
 - SQL Server: `localhost:1433`（ユーザー `sa` / パスワードは `.env` の `MSSQL_SA_PASSWORD`）
 
 SQL Server のヘルスチェックが通ってからバックエンドが起動します。コードを変更した場合は `--build` を付けて再ビルドしてください。

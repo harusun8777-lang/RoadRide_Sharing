@@ -181,7 +181,7 @@ terraform output backend_url
 ### 7. 動作を確認する
 
 1. ポータルでリソースグループ `rideshare-service` を開き、`ca-rideshare-backend` を選ぶ
-2. 「概要」の「アプリケーション URL」を開き、末尾に `/weatherforecast` を付けて JSON が返ることを確認する
+2. 「概要」の「アプリケーション URL」を開き、末尾に `/health` を付けて開き、`"status": "Healthy"` が返ることを確認する（DB に接続できない場合は 503 と `Unhealthy` が返る）
 3. 左メニューの「監視」→「ログ ストリーム」で、`Application started.` が出ていれば DB への接続とテーブル作成も成功しています
 
 ## 更新

@@ -43,6 +43,50 @@
 | `GET` | `/api/reservations/{reservation_id}/notifications` | 通知一覧取得 | 利用者 |
 | `POST` | `/api/notifications/{notification_id}/read` | 通知を既読にする | 共通 |
 
+### 2.1 ヘルスチェック
+
+`GET /health`
+
+サーバーが稼働しているか、データベースに接続できるかを確認する。監視やデプロイ後の確認に使う。
+
+- `/api` の外にあり、認証は不要。
+- 監視ツールでそのまま扱えるよう、「3. 共通レスポンス」の形式ではなく独自の形式で返す。
+- キャッシュさせないため `Cache-Control: no-store` を付ける。
+- 異常の原因（例外の内容など）はレスポンスに含めず、サーバーのログにだけ出す。
+
+| ステータス | 意味 |
+| --- | --- |
+| `200 OK` | すべてのチェックが正常 |
+| `503 Service Unavailable` | いずれかのチェックが異常（データベースに接続できないなど） |
+
+正常時のレスポンス例
+
+```json
+{
+  "status": "Healthy",
+  "checks": {
+    "database": {
+      "status": "Healthy",
+      "description": null
+    }
+  }
+}
+```
+
+異常時のレスポンス例
+
+```json
+{
+  "status": "Unhealthy",
+  "checks": {
+    "database": {
+      "status": "Unhealthy",
+      "description": "データベースに接続できません"
+    }
+  }
+}
+```
+
 ## 3. 共通レスポンス
 
 ### 成功時
