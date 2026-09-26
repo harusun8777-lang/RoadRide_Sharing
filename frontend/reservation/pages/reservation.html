@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="ja">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,7 +10,12 @@
   <script src="../assets/js/reservation.js" defer></script>
   <link rel="stylesheet" href="../assets/css/account.css">
   <script src="../assets/js/account.js" defer></script>
+  <script src="../assets/js/map.js" defer></script>
+  <script async
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAdZTxOsa9cRkjSvOkhPLDJLVHvxKU0lcA&callback=initMaps">
+</script>
 </head>
+
 <body>
   <div class="app-shell">
     <header class="topbar">
@@ -57,72 +63,58 @@
               <label for="pickup-postcode">
                 乗車場所の郵便番号（任意）
               </label>
-
               <div class="postcode-row">
-                <input
-                  id="pickup-postcode"
-                  name="pickup-postcode"
-                  type="text"
-                  inputmode="numeric"
-                  placeholder="郵便番号 例: 860-0001"
-                >
+                <input id="pickup-postcode" name="pickup-postcode" type="text" inputmode="numeric"
+                  placeholder="郵便番号 例: 860-0001">
                 <button type="button" class="secondary" id="pickup-search">
                   住所を検索
                 </button>
               </div>
+              <p class="hint" id="pickup-address-hint">
+                郵便番号を入力せず、住所を直接入力することもできます。
+              </p>
 
-              <p class="hint" id="pickup-address-hint">郵便番号を入力せず、住所を直接入力することもできます。</p>
               <label for="pickup-address">乗車場所の住所 <span class="required">必須</span></label>
-              <input
-                id="pickup-address"
-                name="pickup-address"
-                aria-describedby="pickup-address-hint"
-                type="text"
-                placeholder="住所"
-                required
-              >
+              <input id="pickup-address" name="pickup-address" aria-describedby="pickup-address-hint" type="text"
+                placeholder="住所" required>
+
+              <div class="field full" style="margin-top: 16px;">
+                <label>地図から乗車場所を選択</label>
+                <div id="pickup-map" style="width: 100%; height: 300px; border-radius: 8px; margin-top: 8px;"></div>
+                <p class="hint">地図をタップすると住所が自動入力されます。</p>
+              </div>
             </div>
 
             <div class="field">
-              <label for="destination-postcode">
-                目的地の郵便番号（任意）
-              </label>
+              <label for="destination-postcode">目的地の郵便番号（任意）</label>
 
               <div class="postcode-row">
-                <input
-                  id="destination-postcode"
-                  name="destination-postcode"
-                  type="text"
-                  inputmode="numeric"
-                  placeholder="郵便番号 例: 860-0001"
-                >
-                <button type="button" class="secondary" id="destination-search">
-                  住所を検索
-                </button>
+                <input id="destination-postcode" name="destination-postcode" type="text" inputmode="numeric"
+                  placeholder="郵便番号 例: 860-0001">
+                <button type="button" class="secondary" id="destination-search">住所を検索</button>
               </div>
 
-              <p class="hint" id="destination-address-hint">郵便番号を入力せず、住所を直接入力することもできます。</p>
+              <p class="hint" id="destination-address-hint">
+                郵便番号を入力せず、住所を直接入力することもできます。
+              </p>
+
               <label for="destination-address">目的地の住所 <span class="required">必須</span></label>
-              <input
-                id="destination-address"
-                name="destination-address"
-                aria-describedby="destination-address-hint"
-                type="text"
-                placeholder="住所"
-                required
-              >
+              <input id="destination-address" name="destination-address" type="text" placeholder="住所" required>
+
+              <!-- ★ destination-map（目的地） -->
+              <div class="field full" style="margin-top: 16px;">
+                <label>地図から目的地を選択</label>
+                <div id="destination-map" style="width: 100%; height: 300px; border-radius: 8px; margin-top: 8px;">
+                </div>
+                <p class="hint">地図をタップすると住所が自動入力されます。</p>
+              </div>
             </div>
 
             <div class="field">
               <label for="date">
                 希望乗車日 <span class="required">必須</span>
               </label>
-              <input
-                id="date"
-                name="date"
-                type="date"
-                required
-              >
+              <input id="date" name="date" type="date" required>
               <p class="error-message" id="date-error" aria-live="polite"></p>
             </div>
 
@@ -162,11 +154,7 @@
 
             <div class="field full">
               <label for="notes">補足事項</label>
-              <textarea
-                id="notes"
-                name="notes"
-                placeholder="配車担当者に伝えたいことがあれば入力してください"
-              ></textarea>
+              <textarea id="notes" name="notes" placeholder="配車担当者に伝えたいことがあれば入力してください"></textarea>
               <p class="hint">入力内容は配車担当者が確認します。</p>
             </div>
           </div>
@@ -195,4 +183,5 @@
     </span>
   </nav>
 </body>
+
 </html>

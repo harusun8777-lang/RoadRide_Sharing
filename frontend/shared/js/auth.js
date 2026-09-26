@@ -50,29 +50,29 @@ const RoadRideAuth = (() => {
    * 失敗時はエラーをスローする
    */
   async function login(email, password) {
-    const response = await fetch(`${API_BASE}/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify({ email, password })
-    });
+  const response = await fetch(`${API_BASE}/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    body: JSON.stringify({ email, password })
+  });
 
-    const payload = await response.json().catch(() => ({}));
+  const payload = await response.json().catch(() => ({}));
 
-    if (!response.ok) {
-      const message =
-        response.status === 401
-          ? "メールアドレスまたはパスワードが正しくありません。"
-          : payload.error?.message || "ログインに失敗しました。";
-      throw new Error(message);
-    }
-
-    const { access_token, expires_at } = payload.data;
-    saveToken(access_token, expires_at);
-    return true;
+  if (!response.ok) {
+    const message =
+      response.status === 401
+        ? "メールアドレスまたはパスワードが正しくありません。"
+        : payload.error?.message || "ログインに失敗しました。";
+    throw new Error(message);
   }
+
+  const { access_token, expires_at } = payload.data;
+  saveToken(access_token, expires_at);
+  return true;
+}
 
   /**
    * POST /api/users
@@ -148,13 +148,16 @@ const RoadRideAuth = (() => {
   async function authFetch(path, options = {}) {
     const token = getToken();
 
+    if(!token){
+      throw new Error("authFetch function required token in localstrage");
+    }
+
     const response = await fetch(`${API_BASE}${path}`, {
       ...options,
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...options.headers
+        "Authorization": `Bearer ${token}`
       }
     });
 
