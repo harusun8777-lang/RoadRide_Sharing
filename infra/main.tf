@@ -3,6 +3,10 @@ locals {
     service    = "rideshare"
     managed_by = "terraform"
   }
+
+  # tfvars で指定されていればその値を、なければ Terraform が生成した値を使う
+  sql_admin_password = coalesce(var.sql_admin_password, random_password.sql_admin.result)
+  jwt_signing_key    = coalesce(var.jwt_signing_key, random_password.jwt_signing_key.result)
 }
 
 # ACR や SQL Server のように Azure 全体で一意な名前が必要なリソース用のサフィックス
@@ -74,7 +78,7 @@ resource "azurerm_mssql_server" "main" {
   location                     = azurerm_resource_group.main.location
   version                      = "12.0"
   administrator_login          = var.sql_admin_login
-  administrator_login_password = random_password.sql_admin.result
+  administrator_login_password = local.sql_admin_password
   minimum_tls_version          = "1.2"
   tags                         = local.tags
 }
@@ -133,12 +137,12 @@ resource "azurerm_container_app" "backend" {
 
   secret {
     name  = "db-connection-string"
-    value = "Server=tcp:${azurerm_mssql_server.main.fully_qualified_domain_name},1433;Database=${azurerm_mssql_database.main.name};User Id=${var.sql_admin_login};Password=${random_password.sql_admin.result};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30"
+    value = "Server=tcp:${azurerm_mssql_server.main.fully_qualified_domain_name},1433;Database=${azurerm_mssql_database.main.name};User Id=${var.sql_admin_login};Password=${local.sql_admin_password};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30"
   }
 
   secret {
     name  = "jwt-signing-key"
-    value = random_password.jwt_signing_key.result
+    value = local.jwt_signing_key
   }
 
   ingress {
@@ -193,4 +197,46 @@ resource "azurerm_container_app" "backend" {
 
   # AcrPull が付与される前にイメージを取得しにいかないようにする
   depends_on = [azurerm_role_assignment.backend_acr_pull]
+
+  # イメージは GitHub Actions（.github/workflows/deploy-backend.yml）が main へのマージごとに更新する。
+  # Terraform が古いタグに戻さないよう、作成後のイメージの変更は無視する
+  lifecycle {
+    ignore_changes = [template[0].container[0].image]
+  }
+}
+
+# ---------------------------------------------------------------------------
+# GitHub Actions からのデプロイ
+# ---------------------------------------------------------------------------
+
+# GitHub Actions が OIDC でログインするためのマネージドID（パスワードやシークレットは不要）
+resource "azurerm_user_assigned_identity" "github_actions" {
+  name                = "id-rideshare-github-actions"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  tags                = local.tags
+}
+
+# main ブランチで動くワークフローだけがログインできる
+resource "azurerm_federated_identity_credential" "github_actions_main" {
+  name                = "github-main"
+  resource_group_name = azurerm_resource_group.main.name
+  parent_id           = azurerm_user_assigned_identity.github_actions.id
+  audience            = ["api://AzureADTokenExchange"]
+  issuer              = "https://token.actions.githubusercontent.com"
+  subject             = "repo:${var.github_repository}:ref:refs/heads/main"
+}
+
+# イメージの push
+resource "azurerm_role_assignment" "github_actions_acr_push" {
+  scope                = azurerm_container_registry.main.id
+  role_definition_name = "AcrPush"
+  principal_id         = azurerm_user_assigned_identity.github_actions.principal_id
+}
+
+# Container App のイメージの更新（この Container App だけに限定）
+resource "azurerm_role_assignment" "github_actions_container_app" {
+  scope                = azurerm_container_app.backend.id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_user_assigned_identity.github_actions.principal_id
 }

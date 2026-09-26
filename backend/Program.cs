@@ -39,6 +39,16 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection"),
         sql => sql.EnableRetryOnFailure()));
 
+// ローカルの Swagger UI（start-local.bat で起動）から API を試せるよう、開発時だけ CORS を許可する
+const string LocalSwaggerCorsPolicy = "LocalSwaggerUi";
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddCors(options => options.AddPolicy(LocalSwaggerCorsPolicy, policy =>
+        policy.WithOrigins("http://localhost:8081")
+            .WithHeaders("Authorization", "Content-Type")
+            .AllowAnyMethod()));
+}
+
 builder.Services.AddHealthChecks()
     .AddCheck<DatabaseHealthCheck>("database");
 
@@ -76,6 +86,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors(LocalSwaggerCorsPolicy);
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -1,5 +1,6 @@
 const params = new URLSearchParams(window.location.search);
 const statusLabels = {
+  in_progress: "乗車中",
   matching: "マッチング中",
   confirmed: "予約確定",
   cancelled: "キャンセル済み",
@@ -74,44 +75,6 @@ const detailParams = (typeof RoadRideReservationApi !== 'undefined' && RoadRideR
   return query ? `${pageName}?${query}` : pageName;
 }
 
-function createCurrentReservation() {
-  const reservation = RoadRideReservationApi.fromParams(params);
-
-  if (!reservation.reservationNumber && !reservation.reservationId) {
-    return null;
-  }
-
-  return {
-    ...reservation,
-    status: statusLabels[reservation.status] ? reservation.status : "matching",
-    savedAt: new Date().toISOString()
-  };
-}
-
-function mergeCurrentReservation(history) {
-  const currentReservation = createCurrentReservation();
-
-  if (!currentReservation) {
-    return history;
-  }
-
-  const filteredHistory = history.filter((item) => {
-    if (
-      currentReservation.reservationId &&
-      item.reservationId === currentReservation.reservationId
-    ) {
-      return false;
-    }
-
-    return item.reservationNumber !== currentReservation.reservationNumber;
-  });
-  const nextHistory = [currentReservation, ...filteredHistory];
-
-  RoadRideReservationApi.writeHistory(nextHistory);
-
-  return nextHistory;
-}
-
 function getFilteredReservations(history) {
   return history.filter((reservation) => {
     const searchableText = [
@@ -159,8 +122,8 @@ function renderTable(history) {
       <td data-label="乗車予定">
         <span class="reservation-time">${formatScheduleDatetime(reservation)}</span>
       </td>
-      <td data-label="乗車場所">${reservation.pickup || "---"}</td>
-      <td data-label="目的地">${reservation.destination || "---"}</td>
+      <td data-label="乗車場所">${RoadRideReservationApi.escapeHtml(reservation.pickup || "---")}</td>
+      <td data-label="目的地">${RoadRideReservationApi.escapeHtml(reservation.destination || "---")}</td>
       <td data-label="人数">${reservation.passengers ? `${reservation.passengers}人` : "---"}</td>
       <td data-label="状態">${renderStatus(reservation.status)}</td>
     </tr>
@@ -200,9 +163,7 @@ function resetFilters(history) {
 }
 
 async function initializeHistoryPage() {
-  const history = mergeCurrentReservation(
-    await RoadRideReservationApi.listReservations()
-  );
+  const history = await RoadRideReservationApi.listReservations();
 
   renderSummary(history);
   renderTable(history);
@@ -227,4 +188,4 @@ async function initializeHistoryPage() {
   });
 }
 
-initializeHistoryPage();
+initializeHistoryPage().catch(RoadRideReservationApi.showError);

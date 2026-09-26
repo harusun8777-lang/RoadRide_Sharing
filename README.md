@@ -39,7 +39,25 @@
 - Docker / Docker Compose
 - ローカルで直接動かす場合は .NET 10 SDK
 
-### Docker Compose で起動する（推奨）
+### start-local.bat で起動する（Windows）
+
+SQL Server・バックエンド・Swagger UI をまとめて起動し、起動したらブラウザで Swagger UI を開きます。
+
+```bat
+start-local.bat         :: 起動
+start-local.bat stop    :: 停止（DB のデータは残る）
+```
+
+| URL | 内容 |
+| --- | --- |
+| http://localhost:8080 | API |
+| http://localhost:8081 | Swagger UI（`docs/SWAGGER.yaml` を表示。「Try it out」で API を呼べる） |
+
+- `.env` がなければ `.env.example` からコピーします。`JWT_SIGNING_KEY` は 32 文字以上の値に変更してください
+- Swagger UI から API を呼べるよう、Development 環境のときだけ `http://localhost:8081` からの CORS を許可しています
+- ログインで受け取った `access_token` を、Swagger UI 右上の「Authorize」に入れると認証が必要な API も試せます
+
+### Docker Compose で起動する
 
 ```sh
 cp .env.example .env        # 必要に応じて MSSQL_SA_PASSWORD を変更
@@ -100,11 +118,10 @@ docker compose up --build
 
 ## 設計資料
 
-- [要件定義書](docs/requirements.md)
-- [API仕様書](docs/api-specification.md)
-- [エンドポイント一覧（実装済み）](docs/ENDPOINT.md) / [OpenAPI 定義（Swagger）](docs/swagger.yaml)
-- [データモデル](docs/data-model.md)
-- [画面遷移](docs/screen-transition.md)
-- [UIデザインガイドライン](docs/ui-design-guidelines.md)
-- [ペルソナ](docs/personas.md)
-- [1週間MVP計画](docs/one-week-mvp-plan.md)
+- [要件定義書](docs/REQUIREMENTS.md)
+- [API エンドポイント一覧](docs/ENDPOINT.md) / [OpenAPI 定義（Swagger）](docs/SWAGGER.yaml)
+- [データモデル](docs/DATA_MODEL.md)
+- [画面遷移](docs/SCREEN_TRANSITION.md)
+- [UIデザインガイドライン](docs/UI_DESIGN_GUIDELINES.md)
+- [ペルソナ](docs/PERSONAS.md)
+- [1週間MVP計画](docs/ONE_WEEK_MVP_PLAN.md)

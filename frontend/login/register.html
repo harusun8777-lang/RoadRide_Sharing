@@ -6,6 +6,7 @@
   <title>利用者新規登録 | RoadRide Sharing</title>
   <link rel="stylesheet" href="../top/assets/css/top.css">
   <link rel="stylesheet" href="assets/css/login.css">
+  <script src="../shared/js/auth.js" defer></script>
   <script src="assets/js/register.js" defer></script>
 </head>
 <body>
@@ -27,22 +28,22 @@
         </div>
         <h1 id="page-title">利用者新規登録</h1>
         <p class="login-description">以下の項目を入力してください。</p>
-        <p class="demo-notice" id="demo-notice">現在は仮登録です。入力内容の確認のみ行い、アカウントは作成されません。実際に使用しているパスワードは入力しないでください。</p>
+        <p class="demo-notice" id="demo-notice">登録完了後、自動でログインします。</p>
         <form id="register-form" aria-describedby="demo-notice">
           <div class="form-field">
             <label for="email">メールアドレス <span class="required">必須</span></label>
-            <input id="email" type="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" placeholder="example@example.com" required>
+            <input id="email" maxlength="254" type="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" placeholder="example@example.com" required>
           </div>
           <fieldset class="name-group">
             <legend>名前 <span class="required">必須</span></legend>
             <div class="name-fields">
             <div class="form-field">
               <label for="family-name">姓</label>
-              <input id="family-name" type="text" autocomplete="family-name" placeholder="山田" required>
+              <input id="family-name" maxlength="50" type="text" autocomplete="family-name" placeholder="山田" required>
             </div>
             <div class="form-field">
               <label for="given-name">名</label>
-              <input id="given-name" type="text" autocomplete="given-name" placeholder="太郎" required>
+              <input id="given-name" maxlength="50" type="text" autocomplete="given-name" placeholder="太郎" required>
             </div>
             </div>
           </fieldset>
@@ -51,24 +52,24 @@
             <div class="name-fields">
             <div class="form-field">
               <label for="family-name-kana">姓</label>
-              <input id="family-name-kana" type="text" placeholder="ヤマダ" required>
+              <input id="family-name-kana" pattern="[ァ-ヶー]+" title="全角カタカナで入力してください" maxlength="50" type="text" placeholder="ヤマダ" required>
             </div>
             <div class="form-field">
               <label for="given-name-kana">名</label>
-              <input id="given-name-kana" type="text" placeholder="タロウ" required>
+              <input id="given-name-kana" pattern="[ァ-ヶー]+" title="全角カタカナで入力してください" maxlength="50" type="text" placeholder="タロウ" required>
             </div>
             </div>
           </fieldset>
           <div class="form-field">
             <label for="password">パスワード <span class="required">必須</span></label>
-            <input id="password" type="password" autocomplete="new-password" required>
+            <input id="password" minlength="8" maxlength="128" type="password" autocomplete="new-password" required>
           </div>
           <div class="form-field">
             <label for="password-confirm">パスワード（確認用） <span class="required">必須</span></label>
-            <input id="password-confirm" type="password" autocomplete="new-password" aria-describedby="password-error" placeholder="もう一度パスワードを入力" required>
+            <input id="password-confirm" minlength="8" maxlength="128" type="password" autocomplete="new-password" aria-describedby="password-error" placeholder="もう一度パスワードを入力" required>
             <p id="password-error" class="password-error" aria-live="polite"></p>
           </div>
-          <button class="login-button" type="submit">新規登録（仮登録）</button>
+          <button class="login-button" type="submit">新規登録</button>
         </form>
         <noscript><p>新規登録するにはブラウザのJavaScriptを有効にしてください。</p></noscript>
       </section>

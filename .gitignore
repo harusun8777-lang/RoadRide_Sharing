@@ -7,3 +7,5 @@ infra/.terraform/
 *.tfstate.*
 *.tfplan
 infra/backend.hcl
+*.tfvars
+!*.tfvars.example

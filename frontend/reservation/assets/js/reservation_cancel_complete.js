@@ -15,7 +15,7 @@ function buildHistoryUrl() {
 document.querySelector("#reservation-number").textContent =
   reservation.reservationNumber || "---";
 
-RoadRideReservationApi.mergeHistory(reservation);
+
 
 document.querySelector("#history-button").href = buildHistoryUrl();
 document.querySelector("#breadcrumb-history-link").href = buildHistoryUrl();

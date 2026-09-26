@@ -1,7 +1,5 @@
 const RoadRideReservationApi = (() => {
   const apiBase = "/api";
-  const userId = "user-001";
-  const historyKey = "roadrideReservationHistory";
 
   const careLabels = {
     wheelchair: "車いす",
@@ -9,69 +7,30 @@ const RoadRideReservationApi = (() => {
     other: "その他"
   };
 
-  function readHistory() {
-    try {
-      return JSON.parse(localStorage.getItem(historyKey)) || [];
-    } catch {
-      return [];
-    }
-  }
-
-  function writeHistory(history) {
-    localStorage.setItem(historyKey, JSON.stringify(history));
-  }
-
-  function mergeHistory(reservation) {
-    if (!reservation.reservationNumber && !reservation.reservationId) {
-      return;
-    }
-
-    const history = readHistory();
-    const nextHistory = [
-      reservation,
-      ...history.filter((item) => {
-        if (reservation.reservationId && item.reservationId === reservation.reservationId) {
-          return false;
-        }
-
-        return item.reservationNumber !== reservation.reservationNumber;
-      })
-    ];
-
-    writeHistory(nextHistory);
-  }
-
-  function mergeReservation(baseReservation, nextReservation) {
-    const mergedReservation = { ...baseReservation };
-
-    Object.entries(nextReservation).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
-        mergedReservation[key] = value;
-      }
-    });
-
-    return mergedReservation;
-  }
-
-  function createIdempotencyKey() {
-    if (window.crypto?.randomUUID) {
-      return window.crypto.randomUUID();
-    }
-
-    return `reservation-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  }
-
   async function fetchJson(path, options = {}) {
+    // RoadRideAuth が読み込まれていればトークンを付与する
+    const token = (typeof RoadRideAuth !== "undefined") ? RoadRideAuth.getToken() : null;
+
     const response = await fetch(`${apiBase}${path}`, {
       ...options,
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers
       }
     });
 
     const payload = await response.json().catch(() => ({}));
+
+    // 401 の場合はトークンを削除してログイン画面へ戻す
+    if (response.status === 401) {
+      if (typeof RoadRideAuth !== "undefined") {
+        RoadRideAuth.clearToken();
+        window.location.assign("/frontend/login/index.html?role=user");
+      }
+      throw new Error("ログインの有効期限が切れました。再ログインしてください。");
+    }
 
     if (!response.ok) {
       const message =
@@ -91,17 +50,12 @@ const RoadRideReservationApi = (() => {
       return { date: "", hour: "", minute: "" };
     }
 
-    const match = value.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/);
-
-    if (!match) {
+    const instant = new Date(value);
+    if (Number.isNaN(instant.getTime())) {
       return { date: "", hour: "", minute: "" };
     }
-
-    return {
-      date: match[1],
-      hour: match[2],
-      minute: match[3]
-    };
+    const jst = new Date(instant.getTime() + 9 * 60 * 60 * 1000).toISOString();
+    return { date: jst.slice(0, 10), hour: jst.slice(11, 13), minute: jst.slice(14, 16) };
   }
 
   function buildConsiderationNotes(formValue) {
@@ -171,7 +125,6 @@ const RoadRideReservationApi = (() => {
 
   async function createReservation(formValue) {
     const payload = {
-      user_id: userId,
       pickup_location: formValue.pickup,
       destination: formValue.destination,
       requested_pickup_at: buildRequestedPickupAt(formValue),
@@ -179,85 +132,75 @@ const RoadRideReservationApi = (() => {
       consideration_notes: buildConsiderationNotes(formValue)
     };
 
+    if (!payload.pickup_location.trim() || payload.pickup_location.length > 200 ||
+        !payload.destination.trim() || payload.destination.length > 200) {
+      throw new Error("乗車地と目的地は1〜200文字で入力してください。");
+    }
+    if (!Number.isInteger(payload.passenger_count) || payload.passenger_count < 1) {
+      throw new Error("乗車人数は1人以上の整数で入力してください。");
+    }
+    if (payload.consideration_notes.length > 500) {
+      throw new Error("配慮事項は選択項目と備考を合わせて500文字以内で入力してください。");
+    }
     const result = await fetchJson("/reservations", {
       method: "POST",
-      headers: {
-        "Idempotency-Key": createIdempotencyKey()
-      },
       body: JSON.stringify(payload)
     });
     const reservation = toUiReservation(result.data);
 
     reservation.care = formValue.care;
     reservation.notes = formValue.notes;
-    mergeHistory(reservation);
 
     return reservation;
   }
 
   async function listReservations() {
-    try {
-      const params = new URLSearchParams({ user_id: userId, limit: "50" });
-      const result = await fetchJson(`/reservations?${params.toString()}`);
-      const reservations = (result.data || []).map(toUiReservation);
-
-      reservations.forEach(mergeHistory);
-      return reservations;
-    } catch {
-      return readHistory();
-    }
+    const reservations = [];
+    let page = 1;
+    let result;
+    do {
+      const params = new URLSearchParams({ page: String(page), limit: "50" });
+      result = await fetchJson(`/reservations?${params}`);
+      reservations.push(...result.data.map(toUiReservation));
+      page += 1;
+    } while (result.data.length > 0 && reservations.length < result.meta.total);
+    return reservations;
   }
 
-  async function getReservation(reservationId, fallbackReservation) {
-    if (!reservationId) {
-      return fallbackReservation;
-    }
-
-    try {
-      const result = await fetchJson(`/reservations/${encodeURIComponent(reservationId)}`);
-      const reservation = mergeReservation(
-        fallbackReservation,
-        toUiReservation(result.data)
-      );
-
-      mergeHistory(reservation);
-      return reservation;
-    } catch {
-      return fallbackReservation;
-    }
+  async function getReservation(reservationId) {
+    if (!reservationId) throw new Error("予約IDがありません。予約履歴から選び直してください。");
+    const result = await fetchJson(`/reservations/${encodeURIComponent(reservationId)}`);
+    return toUiReservation(result.data);
   }
 
   async function cancelReservation(reservation, reason) {
-    if (reservation.reservationId) {
-      try {
-        const result = await fetchJson(
-          `/reservations/${encodeURIComponent(reservation.reservationId)}/cancel`,
-          {
-            method: "POST",
-            body: JSON.stringify({ reason })
-          }
-        );
-        const cancelledReservation = {
-          ...reservation,
-          status: result.data?.status || "cancelled",
-          cancellationReason: result.data?.cancellation_reason || reason
-        };
-
-        mergeHistory(cancelledReservation);
-        return cancelledReservation;
-      } catch {
-      }
-    }
-
-    const cancelledReservation = {
+    if (!reservation.reservationId) throw new Error("予約IDがありません。予約履歴から選び直してください。");
+    if (reason && reason.length > 500) throw new Error("キャンセル理由は500文字以内で入力してください。");
+    const result = await fetchJson(
+      `/reservations/${encodeURIComponent(reservation.reservationId)}/cancel`,
+      { method: "POST", body: JSON.stringify({ reason }) }
+    );
+    return {
       ...reservation,
-      status: "cancelled",
-      cancellationReason: reason,
-      cancelledAt: new Date().toISOString()
+      status: result.data.status,
+      cancellationReason: result.data.cancellation_reason,
+      cancelledAt: result.data.cancelled_at
     };
+  }
 
-    mergeHistory(cancelledReservation);
-    return cancelledReservation;
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+  }
+
+  function showError(error) {
+    let element = document.getElementById("reservation-error");
+    if (!element) {
+      element = document.createElement("p");
+      element.id = "reservation-error";
+      element.setAttribute("role", "alert");
+      (document.querySelector("main") || document.body).prepend(element);
+    }
+    element.textContent = error.message || "通信に失敗しました。時間をおいて再度お試しください。";
   }
 
   return {
@@ -267,8 +210,7 @@ const RoadRideReservationApi = (() => {
     cancelReservation,
     fromParams,
     toParams,
-    mergeHistory,
-    readHistory,
-    writeHistory
+    showError,
+    escapeHtml
   };
 })();

@@ -7,9 +7,6 @@ function buildPageUrl(pageName) {
   return query ? `${pageName}?${query}` : pageName;
 }
 
-if (reservation.reservationNumber || reservation.reservationId) {
-  RoadRideReservationApi.mergeHistory(reservation);
-}
 
 document.querySelector("#reservation-number").textContent =
   reservation.reservationNumber || "---";

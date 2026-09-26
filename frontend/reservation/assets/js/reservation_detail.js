@@ -6,6 +6,7 @@ const careLabels = {
   other: "その他"
 };
 const statusLabels = {
+  in_progress: "乗車中",
   matching: "マッチング中",
   confirmed: "予約確定",
   completed: "乗車完了",
@@ -17,7 +18,7 @@ const statusClasses = {
   completed: "success",
   cancelled: "danger"
 };
-const confirmedStatuses = ["confirmed", "completed"];
+const confirmedStatuses = ["confirmed", "in_progress", "completed"];
 
 function formatDisplayDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
@@ -49,15 +50,15 @@ function buildPageUrl(pageName, reservation) {
 }
 
 function renderStatus(reservation) {
-  const status = (reservation && reservation.status) || getParam("status") || "matching";
+  const status = (reservation && reservation.status) || params.get("status") || "matching";
   const statusBadge = document.querySelector("#status-badge");
 
   statusBadge.className = `status ${statusClasses[status] || "info"}`;
   statusBadge.textContent = statusLabels[status] || statusLabels.matching;
 }
 
-function renderConfirmedDetails() {
-  const status = getParam("status");
+function renderConfirmedDetails(reservation) {
+  const status = reservation.status;
   const details = document.querySelector("#confirmed-details");
 
   details.hidden = !confirmedStatuses.includes(status);
@@ -66,18 +67,18 @@ function renderConfirmedDetails() {
   }
 
   document.querySelector("#confirmed-time").textContent = formatDatetime(
-    getParam("date"),
-    getParam("hour"),
-    getParam("minute")
+    reservation.date,
+    reservation.hour,
+    reservation.minute
   );
-  document.querySelector("#confirmed-fare").textContent = getParam("fare") || "---";
-  document.querySelector("#confirmed-duration").textContent = getParam("duration") || "---";
-  document.querySelector("#confirmed-vehicle").textContent = getParam("vehicle") || "---";
-  document.querySelector("#confirmed-rider-order").textContent = getParam("riderOrder") || "---";
+  document.querySelector("#confirmed-fare").textContent = params.get("fare") || "---";
+  document.querySelector("#confirmed-duration").textContent = params.get("duration") || "---";
+  document.querySelector("#confirmed-vehicle").textContent = params.get("vehicle") || "---";
+  document.querySelector("#confirmed-rider-order").textContent = params.get("riderOrder") || "---";
 }
 
 function renderTimeline(reservation) {
-  const status = (reservation && reservation.status) || getParam("status") || "matching";
+  const status = (reservation && reservation.status) || params.get("status") || "matching";
   const timeline = document.querySelector("#reservation-timeline");
   const rideDatetime = formatDatetime(
     reservation.date,
@@ -103,6 +104,8 @@ function renderTimeline(reservation) {
       time: "乗車内容をご確認ください",
       current: true
     });
+  } else if (status === "in_progress") {
+    items.push({ title: "乗車中です", time: "目的地へ向かっています", current: true });
   } else if (status === "cancelled") {
     items.push({
       title: "予約をキャンセルしました",
@@ -128,7 +131,7 @@ function renderTimeline(reservation) {
       <span class="timeline-dot"></span>
       <div>
         <strong>${item.title}</strong>
-        <time>${item.time}</time>
+        <time>${RoadRideReservationApi.escapeHtml(item.time)}</time>
       </div>
     </li>
   `).join("");
@@ -149,28 +152,28 @@ function renderReservation(reservation) {
   document.querySelector("#care").textContent =
     careLabels[reservation.care] || reservation.notes || "なし";
 
-renderStatus(reservation);
-renderConfirmedDetails();
-renderTimeline(reservation);
-updateHistoryStatus();
+  renderStatus(reservation);
+  renderConfirmedDetails(reservation);
+  renderTimeline(reservation);
 
   document.querySelector("#history-link").href =
     buildPageUrl("reservation_history.html", reservation);
+  document.querySelector("#cancel-button").hidden = !["matching", "confirmed"].includes(reservation.status);
   document.querySelector("#cancel-button").href =
     buildPageUrl("reservation_cancel.html", reservation);
 }
 
 async function initializeDetailPage() {
-  const fallbackReservation = RoadRideReservationApi.fromParams(params);
-
-  renderReservation(fallbackReservation);
+  const requestedReservation = RoadRideReservationApi.fromParams(params);
 
   const reservation = await RoadRideReservationApi.getReservation(
-    fallbackReservation.reservationId,
-    fallbackReservation
+    requestedReservation.reservationId
   );
 
   renderReservation(reservation);
 }
 
-initializeDetailPage();
+initializeDetailPage().catch(error => {
+  document.querySelector("#cancel-button").hidden = true;
+  RoadRideReservationApi.showError(error);
+});

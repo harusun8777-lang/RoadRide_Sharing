@@ -2,15 +2,15 @@
   const header = document.querySelector(".topbar-inner, .app-header .header-inner");
   if (!header) return;
 
-  // MVPでは user-001 を利用するため、認証APIができるまでは仮の表示名を使う。
+  // ユーザー情報はログイン中の本人の API から取得する。
   const isDispatcher = header.classList.contains("header-inner");
-  const userName = isDispatcher ? "田中 健一" : "仮ユーザー";
+  const userName = "アカウント";
   header.classList.add("account-header");
   header.querySelector(".header-user")?.remove();
   const headerUser = document.createElement("div");
   headerUser.className = "account-header-user";
   headerUser.innerHTML = '<span class="account-avatar" aria-hidden="true">仮</span>';
-  headerUser.querySelector(".account-avatar").textContent = isDispatcher ? "田" : "仮";
+  headerUser.querySelector(".account-avatar").textContent = "人";
   const accountButton = document.createElement("button");
   accountButton.type = "button";
   accountButton.className = "account-button";
@@ -37,6 +37,14 @@
     </div>`;
 
   menu.querySelector(".account-user-name").textContent = userName;
+  if (typeof RoadRideAuth !== "undefined" && RoadRideAuth.requireAuth(isDispatcher ? "dispatcher" : "user")) {
+    RoadRideAuth.authFetch("/users/me").then(result => {
+      menu.querySelector(".account-user-name").textContent = `${result.data.last_name} ${result.data.first_name}`;
+      headerUser.querySelector(".account-avatar").textContent = result.data.last_name.slice(0, 1);
+    }).catch(() => {
+      menu.querySelector(".account-user-name").textContent = "ユーザー情報を取得できませんでした";
+    });
+  }
   // 配車画面の既存の補助リンクもメニューにまとめ、ヘッダーを一行に保つ。
   const headerLinks = header.querySelectorAll(".header-actions a, :scope > .back-link");
   if (headerLinks.length) {
@@ -95,7 +103,7 @@
   confirmDialog.querySelector('[data-action="cancel"]').addEventListener("click", () => confirmDialog.close());
   confirmDialog.addEventListener("close", () => accountButton.focus());
   confirmDialog.querySelector('[data-action="confirm"]').addEventListener("click", () => {
-    // 仮ログインでは認証情報を保持していない。認証導入時にセッション破棄を追加する。
+    if (typeof RoadRideAuth !== "undefined") RoadRideAuth.clearToken();
     window.location.assign("../../top/index.html");
   });
 })();
