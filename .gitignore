@@ -1,0 +1,19 @@
+# Environment secrets
+.env
+
+# Terraform
+infra/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+infra/backend.hcl
+*.tfvars
+!*.tfvars.example
+
+# .NET のビルド成果物（テストプロジェクト）
+tests/**/bin/
+tests/**/obj/
+TestResults/
+
+# Claude Code のサブエージェント用の作業ツリー
+.claude/worktrees/

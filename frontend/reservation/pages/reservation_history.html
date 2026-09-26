@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>予約履歴 | RoadRide Sharing</title>
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/reservation_history.css">
+  <script src="../assets/js/reservation_api.js" defer></script>
+  <script src="../assets/js/reservation_history.js" defer></script>
+  <link rel="stylesheet" href="../assets/css/account.css">
+  <script src="../assets/js/account.js" defer></script>
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">RR</div>
+        <div>
+          <strong>RoadRide Sharing</strong>
+          <small>地域AI乗り合い交通</small>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main history-page">
+    <section class="intro history-heading">
+      <div>
+        <p class="eyebrow">RESERVATION HISTORY</p>
+        <h1>予約履歴</h1>
+        <p>予約の状態と概要を確認できます。</p>
+      </div>
+      <a class="primary link-button create-reservation-button" href="reservation.html">
+        + 予約を作成
+      </a>
+    </section>
+
+    <section class="summary-grid" aria-label="予約状況">
+      <article class="summary-card">
+        <span class="summary-label">予約件数</span>
+        <strong id="total-count">0</strong>
+        <span class="summary-note">保存されている予約</span>
+      </article>
+      <article class="summary-card summary-card-blue">
+        <span class="summary-label">マッチング中</span>
+        <strong id="matching-count">0</strong>
+        <span class="summary-note">配車を調整中</span>
+      </article>
+      <article class="summary-card summary-card-green">
+        <span class="summary-label">予約確定</span>
+        <strong id="confirmed-count">0</strong>
+        <span class="summary-note">乗車予定</span>
+      </article>
+      <article class="summary-card summary-card-red">
+        <span class="summary-label">キャンセル</span>
+        <strong id="cancelled-count">0</strong>
+        <span class="summary-note">取消済み</span>
+      </article>
+    </section>
+
+    <section class="workspace" aria-label="予約検索と一覧">
+      <div class="list-panel panel">
+        <div class="panel-heading">
+          <div>
+            <h2>予約データ</h2>
+            <p><span id="result-count">0</span>件の予約を表示中</p>
+          </div>
+          <button class="icon-button" id="refresh-button" type="button" title="一覧を初期状態に戻す" aria-label="一覧を初期状態に戻す">↻</button>
+        </div>
+
+        <div class="filters">
+          <label class="search-field">
+            <span>予約を検索</span>
+            <input id="search-input" type="search" placeholder="予約番号・乗車場所・目的地" autocomplete="off">
+          </label>
+          <label>
+            <span>乗車日</span>
+            <input id="date-filter" type="date">
+          </label>
+          <label>
+            <span>状態</span>
+            <select id="status-filter">
+              <option value="all">すべての状態</option>
+              <option value="matching">マッチング中</option>
+              <option value="confirmed">予約確定</option>
+              <option value="completed">乗車完了</option>
+              <option value="cancelled">キャンセル</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <caption class="visually-hidden">予約履歴一覧</caption>
+            <thead>
+              <tr>
+                <th scope="col">乗車予定</th>
+                <th scope="col">乗車場所</th>
+                <th scope="col">目的地</th>
+                <th scope="col">人数</th>
+                <th scope="col">状態</th>
+              </tr>
+            </thead>
+            <tbody id="reservation-table-body"></tbody>
+          </table>
+          <div class="empty-state" id="empty-state" hidden>
+            <span class="empty-icon">⌕</span>
+            <strong>該当する予約がありません</strong>
+            <p>検索条件を変更して、もう一度お試しください。</p>
+            <a class="primary link-button" href="reservation.html">
+              新しく予約する
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="主要画面">
+    <a class="bottom-nav-item" href="reservation.html">
+      <span aria-hidden="true">＋</span>
+      <small>新規予約</small>
+    </a>
+    <a class="bottom-nav-item is-active" href="reservation_history.html" aria-current="page">
+      <span aria-hidden="true">▦</span>
+      <small>予約履歴</small>
+    </a>
+    <span class="bottom-nav-item is-disabled" aria-disabled="true">
+      <span aria-hidden="true">◷</span>
+      <small>運行状況</small>
+    </span>
+  </nav>
+
+</body>
+</html>

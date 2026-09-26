@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>トップ | RoadRide Sharing</title>
+  <link rel="stylesheet" href="assets/css/top.css">
+  <script src="assets/js/top.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="index.html" aria-label="RoadRide Sharing トップ">
+          <span class="brand-mark">RR</span>
+          <span>
+            <strong>RoadRide Sharing</strong>
+            <small>地域AI乗り合い交通</small>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="eyebrow">ROADRIDE SHARING</p>
+          <h1 id="page-title">地域の移動を、予約から配車まで一つにつなぐ</h1>
+          <p>
+            利用者は乗車予約と予約履歴の確認へ、配車担当者は配車状況の確認へ進めます。
+          </p>
+        </div>
+
+      </section>
+
+      <section class="portal-grid" aria-label="利用者と配車担当者のメニュー">
+        <article class="portal-section rider-section">
+          <div class="section-heading">
+            <span class="section-icon rider-icon" aria-hidden="true"></span>
+            <div>
+              <p class="section-label">利用者向け</p>
+              <h2>予約する・確認する</h2>
+            </div>
+          </div>
+
+          <div class="action-list">
+            <a class="action-card primary-action" href="../login/index.html?role=user&amp;next=reservation" data-action-name="新規予約">
+              <span class="action-text">
+                <strong>新規予約</strong>
+                <small>乗車場所、目的地、希望日時を入力します。</small>
+              </span>
+              <span class="action-arrow" aria-hidden="true">→</span>
+            </a>
+
+            <a class="action-card" href="../login/index.html?role=user&amp;next=history" data-action-name="予約履歴">
+              <span class="action-text">
+                <strong>予約履歴</strong>
+                <small>予約状況、詳細、キャンセル手続きの確認へ進みます。</small>
+              </span>
+              <span class="action-arrow" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </article>
+
+        <article class="portal-section dispatcher-section">
+          <div class="section-heading">
+            <span class="section-icon dispatcher-icon" aria-hidden="true"></span>
+            <div>
+              <p class="section-label">配車担当者向け</p>
+              <h2>配車状況を確認する</h2>
+            </div>
+          </div>
+
+          <div class="action-list">
+            <a class="action-card dispatch-action" href="../login/index.html?role=dispatcher&amp;next=dispatch" data-action-name="配車確認">
+              <span class="action-text">
+                <strong>配車確認</strong>
+                <small>予約と配車状況を確認します。</small>
+              </span>
+              <span class="action-arrow" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

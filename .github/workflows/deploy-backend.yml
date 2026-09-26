@@ -1,0 +1,78 @@
+name: バックエンドを Azure にデプロイ
+
+# main にマージされたら、backend のイメージをビルドして Azure Container Apps に反映する。
+# インフラ（Terraform）の変更はこのワークフローでは行わない（infra/README.md の手順で手動で apply する）
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-backend.yml"
+  workflow_dispatch:
+
+# 同時に複数のデプロイが走らないようにする（新しいほうを優先）
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: true
+
+permissions:
+  id-token: write # Azure に OIDC でログインするため
+  contents: read
+
+env:
+  # いずれも秘密情報ではない（値は terraform output github_actions_client_id などで確認できる）
+  AZURE_CLIENT_ID: 1d708f0d-b7ed-49b5-83e3-688a92894201
+  AZURE_TENANT_ID: a45b5a16-0d27-4285-8e28-2d5be8568d98
+  AZURE_SUBSCRIPTION_ID: 303b6594-5afc-4aae-be3b-feb4e1d454a4
+  RESOURCE_GROUP: rideshare-service
+  ACR_NAME: crridesharedslkf2
+  CONTAINER_APP: ca-rideshare-backend
+  IMAGE_REPOSITORY: rideshare-backend
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: チェックアウト
+        uses: actions/checkout@v4
+
+      - name: Azure にログイン（OIDC）
+        uses: azure/login@v2
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: イメージをビルドして ACR に push
+        id: image
+        run: |
+          image="${ACR_NAME}.azurecr.io/${IMAGE_REPOSITORY}:${GITHUB_SHA::7}"
+          az acr login --name "$ACR_NAME"
+          docker build -t "$image" ./backend
+          docker push "$image"
+          echo "name=$image" >> "$GITHUB_OUTPUT"
+
+      - name: Container App のイメージを更新
+        run: |
+          az containerapp update \
+            --name "$CONTAINER_APP" \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "${{ steps.image.outputs.name }}" \
+            --output none
+
+      - name: ヘルスチェック
+        run: |
+          fqdn=$(az containerapp show --name "$CONTAINER_APP" --resource-group "$RESOURCE_GROUP" \
+            --query properties.configuration.ingress.fqdn --output tsv)
+          # 新しいリビジョンの起動（コールドスタートを含む）を最大 5 分待つ
+          for i in $(seq 1 30); do
+            if curl -fsS "https://${fqdn}/health"; then
+              echo
+              echo "デプロイ完了: https://${fqdn}"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::/health が正常を返しませんでした"
+          exit 1

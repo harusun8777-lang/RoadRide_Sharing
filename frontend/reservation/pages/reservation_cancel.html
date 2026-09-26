@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>予約キャンセル | RoadRide Sharing</title>
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/reservation_cancel.css">
+  <script src="../assets/js/reservation_api.js" defer></script>
+  <script src="../assets/js/reservation_cancel.js" defer></script>
+  <link rel="stylesheet" href="../assets/css/account.css">
+  <script src="../assets/js/account.js" defer></script>
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">RR</div>
+        <div>
+          <strong>RoadRide Sharing</strong>
+          <small>地域AI乗り合い交通</small>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main cancel-page">
+    <section class="intro">
+      <p class="eyebrow">CANCEL RESERVATION</p>
+      <h1>予約キャンセル</h1>
+      <p>以下の予約内容を確認し、キャンセルを確定してください。</p>
+    </section>
+
+    <section class="panel cancel-panel">
+      <div class="detail-heading">
+        <div>
+          <span class="detail-label">予約番号</span>
+          <strong id="reservation-number">---</strong>
+        </div>
+        <span class="status danger">キャンセル確認</span>
+      </div>
+
+      <div class="detail-list">
+        <div class="detail-item">
+          <span class="detail-label">日時</span>
+          <span id="ride-datetime">---</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">乗車場所</span>
+          <span id="pickup">---</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">目的地</span>
+          <span id="destination">---</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">乗車人数</span>
+          <span id="passengers">---</span>
+        </div>
+      </div>
+
+      <div class="button-area">
+        <a class="secondary link-button" id="back-button" href="reservation_detail.html">
+          予約詳細に戻る
+        </a>
+        <button type="button" class="danger-button" id="confirm-cancel-button">
+          キャンセルを確定
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="主要画面">
+    <a class="bottom-nav-item" href="reservation.html">
+      <span aria-hidden="true">＋</span>
+      <small>新規予約</small>
+    </a>
+    <a class="bottom-nav-item is-active" href="reservation_history.html" aria-current="page">
+      <span aria-hidden="true">▦</span>
+      <small>予約履歴</small>
+    </a>
+    <span class="bottom-nav-item is-disabled" aria-disabled="true">
+      <span aria-hidden="true">◷</span>
+      <small>運行状況</small>
+    </span>
+  </nav>
+
+</body>
+</html>

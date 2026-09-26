@@ -1,0 +1,168 @@
+/* Reservation Cancel Page */
+
+.cancel-page .intro,
+.cancel-page .panel {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.detail-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-heading strong {
+  display: block;
+  color: var(--blue);
+  font-size: 28px;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.detail-label {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.status.danger {
+  color: var(--danger);
+  background: #fee2e2;
+}
+
+.detail-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-item {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 24px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-item > span:last-child {
+  word-break: break-word;
+}
+
+.button-area {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.danger-button {
+  min-height: 48px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 12px;
+  color: white;
+  background: var(--danger);
+  font-weight: 700;
+}
+
+.danger-button:hover {
+  background: #991b1b;
+  filter: brightness(.96);
+}
+
+@media (max-width: 767px) {
+  .detail-heading {
+    flex-direction: column;
+  }
+
+  .detail-heading strong {
+    font-size: 24px;
+  }
+
+  .detail-item {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 16px 0;
+  }
+
+  .button-area {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .button-area .link-button,
+  .button-area .danger-button {
+    width: 100%;
+  }
+}
+
+/* =========================================
+   Android / スマートフォン向け強化
+   (max-width: 480px)
+   ========================================= */
+@media (max-width: 480px) {
+
+  .cancel-page .panel {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  /* 詳細見出し */
+  .detail-heading {
+    gap: 10px;
+    padding-bottom: 18px;
+  }
+
+  .detail-heading strong {
+    font-size: 20px;
+  }
+
+  .detail-label {
+    font-size: 12px;
+  }
+
+  /* 詳細リスト */
+  .detail-item {
+    gap: 4px;
+    padding: 14px 0;
+  }
+
+  .detail-item > span:last-child {
+    font-size: 15px;
+  }
+
+  /* ボタンエリア */
+  .button-area {
+    margin-top: 20px;
+    gap: 10px;
+  }
+
+  .button-area .link-button,
+  .button-area .danger-button {
+    min-height: 52px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+}

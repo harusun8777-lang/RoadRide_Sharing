@@ -1,0 +1,63 @@
+name: フロントエンドを Cloudflare にデプロイ
+
+# main にマージされたら、frontend/ を Cloudflare Workers（静的アセット + /api の中継）にデプロイする。
+# PR では dry-run だけを行い、設定とパッケージングに問題がないかを確認する
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - "cloudflare/**"
+      - ".github/workflows/deploy-frontend.yml"
+  pull_request:
+    paths:
+      - "frontend/**"
+      - "cloudflare/**"
+      - ".github/workflows/deploy-frontend.yml"
+  workflow_dispatch:
+
+# 同時に複数のデプロイが走らないようにする（新しいほうを優先）
+concurrency:
+  group: deploy-frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: cloudflare
+    steps:
+      - name: チェックアウト
+        uses: actions/checkout@v4
+
+      - name: Node.js のセットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: cloudflare/package-lock.json
+
+      - name: 依存パッケージのインストール
+        run: npm ci
+
+      # PR ではデプロイせず、ビルドとパッケージングだけ確認する（Cloudflare の認証は不要）
+      - name: dry-run
+        if: github.event_name == 'pull_request'
+        run: npx wrangler deploy --dry-run
+
+      - name: デプロイ
+        if: github.event_name != 'pull_request'
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: cloudflare
+          packageManager: npm
+          # cloudflare/package.json と同じバージョンに固定する（更新するときは両方を変える）
+          wranglerVersion: "4.141.0"
+          command: deploy

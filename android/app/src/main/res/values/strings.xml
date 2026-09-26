@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RoadRide Sharing</string>
+    <string name="app_tagline">地域AI乗り合い交通</string>
+    <string name="select_mode">使い方を選んでください</string>
+    <string name="btn_rider">利用者として使う</string>
+    <string name="btn_dispatcher">配車担当者として使う</string>
+    <string name="btn_retry">再試行</string>
+    <string name="error_title">接続できませんでした</string>
+    <string name="error_message">ネットワーク接続を確認してから\nもう一度お試しください。</string>
+</resources>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>予約内容の確認 | RoadRide Sharing</title>
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/reservation_confirm.css">
+  <script src="../assets/js/reservation_api.js" defer></script>
+  <script src="../assets/js/reservation_confirm.js" defer></script>
+  <link rel="stylesheet" href="../assets/css/account.css">
+  <script src="../assets/js/account.js" defer></script>
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">RR</div>
+        <div>
+          <strong>RoadRide Sharing</strong>
+          <small>地域AI乗り合い交通</small>
+        </div>
+      </div>
+    </div>
+  </header>
+
+
+  <main class="main confirm-page">
+
+    <section class="intro">
+      <p class="eyebrow">CONFIRMATION</p>
+      <h1>予約内容の確認</h1>
+      <p>
+        以下の内容で予約します。内容をご確認ください。
+      </p>
+    </section>
+
+
+    <section class="panel">
+
+      <div class="section-title">
+        <h2>予約内容</h2>
+      </div>
+
+
+      <div class="confirm-list">
+
+        <div class="confirm-item">
+          <span class="confirm-label">乗車場所</span>
+          <span id="confirm-pickup">---</span>
+        </div>
+
+        <div class="confirm-item">
+          <span class="confirm-label">目的地</span>
+          <span id="confirm-destination">---</span>
+        </div>
+
+        <div class="confirm-item">
+          <span class="confirm-label">希望乗車日</span>
+          <span id="confirm-date">---</span>
+        </div>
+
+        <div class="confirm-item">
+          <span class="confirm-label">希望乗車時刻</span>
+          <span id="confirm-time">---</span>
+        </div>
+
+        <div class="confirm-item">
+          <span class="confirm-label">利用人数</span>
+          <span id="confirm-passengers">---</span>
+        </div>
+
+        <div class="confirm-item">
+          <span class="confirm-label">配慮事項</span>
+          <span id="confirm-care">---</span>
+        </div>
+
+        <div class="confirm-item">
+          <span class="confirm-label">備考</span>
+          <span id="confirm-notes">---</span>
+        </div>
+
+      </div>
+
+
+      <div class="button-area">
+
+        <button
+          type="button"
+          class="secondary"
+          id="back-button"
+        >
+          入力内容を修正する
+        </button>
+
+        <button
+          type="button"
+          class="primary"
+          id="confirm-button"
+        >
+          予約を確定する
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <nav class="bottom-nav" aria-label="主要画面">
+    <a class="bottom-nav-item is-active" href="reservation.html" aria-current="page">
+      <span aria-hidden="true">＋</span>
+      <small>新規予約</small>
+    </a>
+    <a class="bottom-nav-item" href="reservation_history.html">
+      <span aria-hidden="true">▦</span>
+      <small>予約履歴</small>
+    </a>
+    <span class="bottom-nav-item is-disabled" aria-disabled="true">
+      <span aria-hidden="true">◷</span>
+      <small>運行状況</small>
+    </span>
+  </nav>
+
+</body>
+</html>
