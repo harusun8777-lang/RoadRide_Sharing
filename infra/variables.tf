@@ -23,9 +23,12 @@ variable "location" {
 }
 
 variable "github_repository" {
-  description = "デプロイを許可する GitHub リポジトリ（owner/name）"
+  # このリポジトリの OIDC トークンの sub は、オーナーとリポジトリの数値IDを含む形式
+  # （repo:owner@オーナーID/name@リポジトリID:ref:...）になっている。
+  # 実際の値は Azure のエラー AADSTS700213 の "assertion subject" で確認できる
+  description = "OIDC トークンの sub に入るリポジトリの表記（owner@オーナーID/name@リポジトリID）"
   type        = string
-  default     = "harusun8777-lang/RoadRide_Sharing"
+  default     = "harusun8777-lang@254899395/RoadRide_Sharing@1377844180"
 }
 
 variable "backend_image_tag" {
