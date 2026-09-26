@@ -1,0 +1,8 @@
+# cp backend.hcl.example backend.hcl して使う
+subscription_id      = "303b6594-5afc-4aae-be3b-feb4e1d454a4"
+tenant_id            = "a45b5a16-0d27-4285-8e28-2d5be8568d98"
+resource_group_name  = "rideshare-tfstate"
+storage_account_name = "yukki072417"
+container_name       = "tfstate"
+key                  = "rideshare.tfstate"
+use_azuread_auth     = true

@@ -413,3 +413,113 @@ tbody tr.reservation-row:focus {
     width: 100%;
   }
 }
+
+/* =========================================
+   Android / スマートフォン向け強化
+   (max-width: 480px)
+   ========================================= */
+@media (max-width: 480px) {
+
+  .main.history-page {
+    width: calc(100% - 24px);
+    padding: 20px 0 88px;
+  }
+
+  /* サマリーカード */
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .summary-card {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .summary-card strong {
+    font-size: 24px;
+  }
+
+  .summary-label {
+    font-size: 12px;
+  }
+
+  .summary-note {
+    font-size: 11px;
+  }
+
+  /* 見出し */
+  .history-heading {
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  /* 新規予約ボタン */
+  .create-reservation-button {
+    min-height: 52px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+
+  /* パネル */
+  .list-panel.panel {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  /* フィルター */
+  .filters {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .filters input,
+  .filters select {
+    min-height: 48px;
+    font-size: 15px;
+  }
+
+  /* 予約カード（カード形式） */
+  tbody {
+    gap: 10px;
+  }
+
+  tbody tr.reservation-row {
+    padding: 14px 12px;
+    border-radius: 10px;
+  }
+
+  td {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 8px;
+    padding: 7px 0;
+    font-size: 13px;
+  }
+
+  td::before {
+    font-size: 11px;
+  }
+
+  .reservation-time {
+    font-size: 14px;
+  }
+
+  /* アイコンボタン */
+  .icon-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  /* 空の状態 */
+  .empty-state {
+    padding: 40px 16px;
+  }
+
+  .empty-state .link-button {
+    min-height: 52px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+}

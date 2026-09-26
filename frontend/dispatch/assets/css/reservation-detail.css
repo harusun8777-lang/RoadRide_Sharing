@@ -131,3 +131,208 @@ h2 { font-size: 20px; }
   .bottom-nav-item small { font-size: 11px; font-weight: 700; }
   .bottom-nav-item.is-active { color: var(--blue); }
 }
+
+/* =========================================
+   Android / スマートフォン向け強化
+   (max-width: 480px)
+   ========================================= */
+@media (max-width: 480px) {
+
+  .header-inner,
+  .page-content {
+    width: calc(100% - 24px);
+  }
+
+  .header-inner {
+    min-height: 56px;
+    gap: 8px;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+
+  .brand strong {
+    font-size: 14px;
+  }
+
+  /* ヘッダーアクションリンクを非表示→ボトムナビで代替 */
+  .header-actions {
+    gap: 10px;
+  }
+
+  .header-nav-link {
+    display: none;
+  }
+
+  .back-link {
+    font-size: 12px;
+  }
+
+  .page-content {
+    padding: 18px 0 88px;
+  }
+
+  .breadcrumb {
+    font-size: 11px;
+    gap: 5px;
+    margin-bottom: 14px;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+  .page-description {
+    font-size: 13px;
+    margin-top: 5px;
+  }
+
+  /* ノーティスバナー */
+  .notice {
+    padding: 12px 14px;
+    border-radius: 12px;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .notice-icon {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    font-size: 12px;
+  }
+
+  .notice strong {
+    font-size: 13px;
+  }
+
+  .notice p {
+    font-size: 12px;
+  }
+
+  /* パネル */
+  .panel {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  /* 予約番号カード */
+  .reservation-card h2 {
+    font-size: 20px;
+  }
+
+  .copy-button {
+    min-height: 40px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  /* 情報グリッド：1列で余白を縮小 */
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .info-item {
+    padding: 11px 0;
+  }
+
+  .info-item dt {
+    font-size: 12px;
+  }
+
+  .info-item dd {
+    font-size: 15px;
+    margin-top: 2px;
+  }
+
+  .info-item.highlight dd {
+    font-size: 20px;
+  }
+
+  /* ルートカード */
+  .card-heading {
+    margin-bottom: 14px;
+  }
+
+  .route-point {
+    min-height: 52px;
+  }
+
+  .route-point strong {
+    font-size: 16px;
+  }
+
+  .route-label {
+    font-size: 11px;
+  }
+
+  /* タイムライン */
+  .timeline-item {
+    padding: 12px 0;
+    gap: 12px;
+  }
+
+  .timeline-item strong {
+    font-size: 13px;
+  }
+
+  .timeline-item time {
+    font-size: 11px;
+  }
+
+  /* サイドカラムのアクションカード：ボタンを縦並びに戻す */
+  .action-card {
+    display: block;
+  }
+
+  .action-card h2 {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .action-card p {
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+
+  /* ボタン */
+  .button {
+    min-height: 52px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+
+  .button + .button {
+    margin-top: 10px;
+  }
+
+  /* サポートカード */
+  .support-card h2 {
+    font-size: 14px;
+  }
+
+  .support-card p {
+    font-size: 12px;
+  }
+
+  /* ボトムナビ */
+  .bottom-nav {
+    padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .bottom-nav-item {
+    min-width: 64px;
+    min-height: 48px;
+    font-size: 20px;
+    gap: 2px;
+  }
+
+  .bottom-nav-item small {
+    font-size: 10px;
+  }
+}

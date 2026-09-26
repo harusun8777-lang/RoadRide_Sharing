@@ -895,3 +895,219 @@ td {
     color: var(--blue);
   }
 }
+
+/* =========================================
+   Android / スマートフォン向け強化
+   (max-width: 480px)
+   ========================================= */
+@media (max-width: 480px) {
+
+  /* ヘッダー：ブランド名を短縮しタップ領域を確保 */
+  .header-inner,
+  .page-content {
+    width: calc(100% - 24px);
+  }
+
+  .header-inner {
+    min-height: 56px;
+    gap: 10px;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+
+  .brand strong {
+    font-size: 14px;
+  }
+
+  .back-link,
+  .header-nav-link {
+    font-size: 13px;
+  }
+
+  /* ページコンテンツ余白 */
+  .page-content {
+    padding: 20px 0 88px;
+  }
+
+  .breadcrumb {
+    font-size: 12px;
+    margin-bottom: 16px;
+    gap: 6px;
+  }
+
+  /* 見出し */
+  h1 {
+    font-size: 24px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  .page-heading {
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .page-description {
+    font-size: 13px;
+    margin-top: 6px;
+  }
+
+  /* パネル */
+  .panel {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  /* ボタン：Android タップターゲット 48px 以上 */
+  .button {
+    min-height: 52px;
+    border-radius: 12px;
+    font-size: 15px;
+  }
+
+  /* 情報グリッド */
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .info-item {
+    padding: 12px 0;
+  }
+
+  .info-item dt {
+    font-size: 12px;
+  }
+
+  .info-item dd {
+    font-size: 15px;
+  }
+
+  .info-item.highlight dd {
+    font-size: 20px;
+  }
+
+  /* ルート表示 */
+  .route-point {
+    min-height: 56px;
+  }
+
+  .route-point strong {
+    font-size: 16px;
+  }
+
+  /* タイムライン */
+  .timeline-item strong {
+    font-size: 13px;
+  }
+
+  /* ボトムナビ：タップ領域を広げる */
+  .bottom-nav {
+    padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .bottom-nav-item {
+    min-width: 64px;
+    min-height: 48px;
+    font-size: 20px;
+    gap: 2px;
+  }
+
+  .bottom-nav-item small {
+    font-size: 10px;
+  }
+
+  /* ステータスバッジ */
+  .status {
+    font-size: 11px;
+    min-height: 26px;
+    padding: 2px 9px;
+  }
+
+  /* サマリーカード */
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .summary-card {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .summary-card strong {
+    font-size: 28px;
+  }
+
+  /* テーブル → カード形式に切り替え */
+  .table-container {
+    overflow-x: hidden;
+  }
+
+  table thead {
+    display: none;
+  }
+
+  table tbody tr.reservation-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 12px;
+    padding: 14px 4px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  table tbody tr.reservation-row td {
+    padding: 0;
+    border: none;
+    font-size: 13px;
+    max-width: none;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  /* 予約番号列：太字・青色リンク */
+  table tbody tr.reservation-row td:first-child {
+    grid-column: 1 / -1;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* ステータス列：右上に配置 */
+  table tbody tr.reservation-row td:last-child {
+    grid-row: 1;
+    grid-column: 2;
+    align-self: start;
+  }
+
+  /* ノーティス */
+  .notice {
+    padding: 14px;
+    border-radius: 12px;
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  .notice-icon {
+    width: 22px;
+    height: 22px;
+    font-size: 12px;
+  }
+
+  /* アクションカード */
+  .action-card h2 {
+    font-size: 16px;
+  }
+
+  .action-card p {
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+}

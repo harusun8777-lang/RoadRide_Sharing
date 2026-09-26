@@ -342,3 +342,148 @@
     text-align: left;
   }
 }
+
+/* =========================================
+   Android / スマートフォン向け強化
+   (max-width: 480px)
+   ========================================= */
+@media (max-width: 480px) {
+
+  /* メトリクスカード：2列を維持しつつコンパクトに */
+  .dashboard-summary {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .dashboard-metric {
+    min-height: 100px;
+    padding: 14px 12px;
+    border-radius: 12px;
+  }
+
+  .dashboard-metric .metric-label {
+    font-size: 11px;
+  }
+
+  .dashboard-metric strong {
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .dashboard-metric > span:last-child {
+    font-size: 11px;
+  }
+
+  /* グリッドを1列に */
+  .dashboard-grid,
+  .lower-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  /* パネル見出し */
+  .panel-heading {
+    margin-bottom: 14px;
+  }
+
+  .panel-count {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  /* 対応が必要な予約：タップ領域を広げる */
+  .attention-item {
+    padding: 14px 0;
+    gap: 8px;
+  }
+
+  .attention-main strong {
+    font-size: 14px;
+  }
+
+  .attention-main small {
+    font-size: 11px;
+  }
+
+  .attention-action {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 12px;
+    border: 1px solid #93c5fd;
+    border-radius: 8px;
+    background: #eff6ff;
+    font-size: 12px;
+  }
+
+  /* 運行状況 */
+  .operation-item {
+    padding: 12px 0;
+  }
+
+  .operation-label {
+    font-size: 12px;
+  }
+
+  .operation-value {
+    font-size: 18px;
+  }
+
+  /* 直近乗車予定 */
+  .schedule-item {
+    padding: 14px 0;
+    gap: 4px;
+  }
+
+  .schedule-main strong {
+    font-size: 14px;
+  }
+
+  .schedule-time {
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  /* パネルリンク */
+  .panel-link {
+    margin-top: 14px;
+    padding-top: 14px;
+    font-size: 13px;
+    min-height: 44px;
+    align-items: center;
+  }
+
+  /* ショートカット */
+  .shortcut-item {
+    min-height: 60px;
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  .shortcut-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+    border-radius: 9px;
+  }
+
+  .shortcut-item strong {
+    font-size: 14px;
+  }
+
+  .shortcut-item small {
+    font-size: 11px;
+  }
+
+  /* 日付表示 */
+  .dashboard-date {
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+
+  .dashboard-date strong {
+    font-size: 14px;
+  }
+}

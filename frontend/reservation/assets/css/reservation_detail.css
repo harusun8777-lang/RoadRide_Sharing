@@ -362,3 +362,111 @@
     margin-top: 10px;
   }
 }
+
+/* =========================================
+   Android / スマートフォン向け強化
+   (max-width: 480px)
+   ========================================= */
+@media (max-width: 480px) {
+
+  .breadcrumb {
+    font-size: 12px;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .panel {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  /* カード見出し */
+  .card-heading {
+    margin-bottom: 14px;
+    gap: 10px;
+  }
+
+  .reservation-card h2 {
+    font-size: 20px;
+  }
+
+  /* 情報グリッド */
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .info-item {
+    padding: 12px 0;
+  }
+
+  .info-item dt {
+    font-size: 12px;
+  }
+
+  .info-item dd {
+    font-size: 15px;
+    margin-top: 2px;
+  }
+
+  .info-item.highlight dd {
+    font-size: 20px;
+  }
+
+  /* ルート */
+  .route-point {
+    min-height: 52px;
+  }
+
+  .route-point strong {
+    font-size: 15px;
+  }
+
+  .route-label {
+    font-size: 11px;
+  }
+
+  /* タイムライン */
+  .timeline-item {
+    padding: 12px 0;
+    gap: 12px;
+  }
+
+  .timeline-item strong {
+    font-size: 13px;
+  }
+
+  .timeline-item time {
+    font-size: 11px;
+  }
+
+  /* アクションカード */
+  .action-card {
+    display: block;
+  }
+
+  .action-card h2 {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .action-card p {
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+
+  .link-button {
+    min-height: 52px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+
+  .cancel-link {
+    min-height: 52px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+
+  .link-button + .link-button {
+    margin-top: 10px;
+  }
+}

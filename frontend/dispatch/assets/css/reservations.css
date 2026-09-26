@@ -288,3 +288,198 @@ td { font-size: 14px; max-width: 200px; overflow: hidden; text-overflow: ellipsi
   .bottom-nav-item small { font-size: 11px; font-weight: 700; }
   .bottom-nav-item.is-active { color: var(--blue); }
 }
+
+/* =========================================
+   Android / スマートフォン向け強化
+   (max-width: 480px)
+   ========================================= */
+@media (max-width: 480px) {
+
+  .header-inner,
+  .page-content {
+    width: calc(100% - 24px);
+  }
+
+  .header-inner {
+    min-height: 56px;
+    gap: 10px;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+
+  .brand strong {
+    font-size: 14px;
+  }
+
+  .page-content {
+    padding: 20px 0 88px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  .page-description {
+    font-size: 13px;
+  }
+
+  /* パネル */
+  .panel {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  /* サマリーグリッド */
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .summary-card {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .summary-card strong {
+    font-size: 24px;
+  }
+
+  .summary-label {
+    font-size: 12px;
+  }
+
+  .summary-note {
+    font-size: 11px;
+  }
+
+  /* フィルター */
+  .filters {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .filters input,
+  .filters select {
+    min-height: 48px;
+    font-size: 15px;
+    border-radius: 10px;
+  }
+
+  /* テーブル → カード形式 */
+  .table-container {
+    margin: 0 -16px;
+    overflow-x: hidden;
+  }
+
+  table thead {
+    display: none;
+  }
+
+  table tbody tr.reservation-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    row-gap: 3px;
+    column-gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+  }
+
+  table tbody tr.reservation-row:hover,
+  table tbody tr.reservation-row.is-selected {
+    background: #eff6ff;
+  }
+
+  table tbody tr.reservation-row td {
+    padding: 0;
+    border: none;
+    font-size: 13px;
+    max-width: none;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    vertical-align: middle;
+  }
+
+  /* 乗車予定（1列目）：大きく上段に */
+  table tbody tr.reservation-row td:nth-child(1) {
+    grid-column: 1 / 2;
+    grid-row: 1;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* 状態バッジ（4列目）：右上 */
+  table tbody tr.reservation-row td:nth-child(4) {
+    grid-column: 2 / 3;
+    grid-row: 1;
+    justify-self: end;
+    align-self: start;
+  }
+
+  /* 乗車場所（2列目）：下段左 */
+  table tbody tr.reservation-row td:nth-child(2) {
+    grid-column: 1 / 2;
+    grid-row: 2;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  /* 目的地（3列目）：下段左続き */
+  table tbody tr.reservation-row td:nth-child(3) {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  /* 予約リンク */
+  .reservation-link {
+    font-size: 15px;
+  }
+
+  /* パネル見出し */
+  .panel-heading {
+    margin-bottom: 14px;
+  }
+
+  .panel-heading h2 {
+    font-size: 17px;
+  }
+
+  /* リフレッシュボタン */
+  .icon-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  /* 空の状態 */
+  .empty-state {
+    padding: 40px 16px;
+  }
+
+  /* ボトムナビ */
+  .bottom-nav {
+    padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .bottom-nav-item {
+    min-width: 64px;
+    min-height: 48px;
+    font-size: 20px;
+    gap: 2px;
+  }
+
+  .bottom-nav-item small {
+    font-size: 10px;
+  }
+}
