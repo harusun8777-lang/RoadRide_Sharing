@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // フロントエンド（frontend/ の静的ファイル）を配信し、/api/* だけ Azure のバックエンドへ中継する Worker
+  "name": "roadride-sharing",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-26",
+  "workers_dev": true,
+  "assets": {
+    "directory": "../frontend",
+    "binding": "ASSETS",
+    // /api/* だけ Worker のコードで処理し、それ以外は静的ファイルとして返す
+    "run_worker_first": ["/api/*"],
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "vars": {
+    // 中継先のバックエンド（Azure Container Apps）。ローカルでは .dev.vars で上書きする
+    "BACKEND_ORIGIN": "https://ca-rideshare-backend.delightfulsea-b341bdde.japaneast.azurecontainerapps.io"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

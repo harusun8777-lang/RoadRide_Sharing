@@ -26,6 +26,8 @@
 │   └── Dockerfile
 ├── docs/                # 要件定義・API仕様・データモデル等の設計資料
 ├── infra/               # Azure 本番環境の Terraform（手順は infra/README.md）
+├── frontend/            # フロントエンド（静的な HTML/CSS/JS）
+├── cloudflare/          # フロントエンドを配信し /api を中継する Cloudflare Worker（手順は cloudflare/README.md）
 ├── docker-compose.yml
 └── .env.example
 ```
