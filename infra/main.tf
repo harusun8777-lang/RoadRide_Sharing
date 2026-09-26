@@ -197,4 +197,46 @@ resource "azurerm_container_app" "backend" {
 
   # AcrPull が付与される前にイメージを取得しにいかないようにする
   depends_on = [azurerm_role_assignment.backend_acr_pull]
+
+  # イメージは GitHub Actions（.github/workflows/deploy-backend.yml）が main へのマージごとに更新する。
+  # Terraform が古いタグに戻さないよう、作成後のイメージの変更は無視する
+  lifecycle {
+    ignore_changes = [template[0].container[0].image]
+  }
+}
+
+# ---------------------------------------------------------------------------
+# GitHub Actions からのデプロイ
+# ---------------------------------------------------------------------------
+
+# GitHub Actions が OIDC でログインするためのマネージドID（パスワードやシークレットは不要）
+resource "azurerm_user_assigned_identity" "github_actions" {
+  name                = "id-rideshare-github-actions"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  tags                = local.tags
+}
+
+# main ブランチで動くワークフローだけがログインできる
+resource "azurerm_federated_identity_credential" "github_actions_main" {
+  name                = "github-main"
+  resource_group_name = azurerm_resource_group.main.name
+  parent_id           = azurerm_user_assigned_identity.github_actions.id
+  audience            = ["api://AzureADTokenExchange"]
+  issuer              = "https://token.actions.githubusercontent.com"
+  subject             = "repo:${var.github_repository}:ref:refs/heads/main"
+}
+
+# イメージの push
+resource "azurerm_role_assignment" "github_actions_acr_push" {
+  scope                = azurerm_container_registry.main.id
+  role_definition_name = "AcrPush"
+  principal_id         = azurerm_user_assigned_identity.github_actions.principal_id
+}
+
+# Container App のイメージの更新（この Container App だけに限定）
+resource "azurerm_role_assignment" "github_actions_container_app" {
+  scope                = azurerm_container_app.backend.id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_user_assigned_identity.github_actions.principal_id
 }

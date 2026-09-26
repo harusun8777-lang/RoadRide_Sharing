@@ -55,6 +55,7 @@ flowchart LR
 | Azure SQL Database | `sql-rideshare-<ランダム>` / `RoadRideSharing` | DB（DTU / Basic） |
 | Log Analytics | `log-rideshare` | ログ |
 | マネージドID | `id-rideshare-backend` | ACR からのイメージ取得（AcrPull） |
+| マネージドID | `id-rideshare-github-actions` | GitHub Actions からのデプロイ（OIDC。AcrPush と Container App の更新） |
 | リソースグループ | `rideshare-tfstate` | Terraform の state 置き場（手動で作成。Terraform では管理しない） |
 | ストレージアカウント | `yukki072417` | state ファイル `tfstate/rideshare.tfstate` を保存 |
 
@@ -205,12 +206,29 @@ terraform output backend_url
 
 ## 更新
 
-### アプリを再デプロイする
+### アプリを再デプロイする（自動）
+
+`main` にマージされると、GitHub Actions（`.github/workflows/deploy-backend.yml`）が自動でデプロイします。
+
+```mermaid
+flowchart LR
+    merge(["main にマージ<br/>（backend/ に変更あり）"]) --> login["Azure にログイン<br/>OIDC・シークレット不要"]
+    login --> build["イメージをビルドして<br/>ACR に push<br/>タグ = コミットの短縮SHA"]
+    build --> update["Container App の<br/>イメージを更新"]
+    update --> health["/health で確認"]
+```
+
+- `backend/` 以下とワークフロー自体の変更だけが対象です。GitHub の Actions タブから手動でも実行できます（workflow_dispatch）
+- ログインには Terraform で作ったマネージドID `id-rideshare-github-actions` を使います。`main` ブランチのワークフローだけがログインでき、権限は ACR への push（AcrPush）と `ca-rideshare-backend` の更新だけです
+- イメージは GitHub Actions が更新するため、Terraform はイメージの変更を無視します（`lifecycle.ignore_changes`）。インフラの変更は今までどおり手動で `terraform apply` します
+
+手動でデプロイする場合：
 
 ```sh
 TAG=$(git rev-parse --short HEAD)
 az acr build -r $(terraform output -raw acr_name) -t rideshare-backend:$TAG --subscription YasuiSoftwere ../backend
-terraform apply -var backend_image_tag=$TAG
+az containerapp update -n ca-rideshare-backend -g rideshare-service --subscription YasuiSoftwere \
+  --image $(terraform output -raw acr_login_server)/rideshare-backend:$TAG
 ```
 
 ### フロントエンドのドメインを許可する（CORS）

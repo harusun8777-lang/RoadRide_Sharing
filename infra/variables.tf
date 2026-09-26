@@ -22,8 +22,14 @@ variable "location" {
   default     = "japaneast"
 }
 
+variable "github_repository" {
+  description = "デプロイを許可する GitHub リポジトリ（owner/name）"
+  type        = string
+  default     = "harusun8777-lang/RoadRide_Sharing"
+}
+
 variable "backend_image_tag" {
-  description = "ACR にプッシュした backend イメージのタグ"
+  description = "Container App 作成時の backend イメージのタグ（作成後は GitHub Actions が更新する）"
   type        = string
   default     = "latest"
 }
