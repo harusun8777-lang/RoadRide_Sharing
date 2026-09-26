@@ -9,3 +9,8 @@ infra/.terraform/
 infra/backend.hcl
 *.tfvars
 !*.tfvars.example
+
+# .NET のビルド成果物（テストプロジェクト）
+tests/**/bin/
+tests/**/obj/
+TestResults/
