@@ -275,7 +275,41 @@ const RoadRideAuth = (() => {
     return payload.data;
   }
 
+  // ブラウザの表示言語に依存せず、入力エラーと吹き出しを日本語にする。
+  const localizedInputs = new WeakSet();
+  function inputErrorMessage(input) {
+    const validity = input.validity || {};
+    const labels = {
+      email: "メールアドレス", password: "パスワード", "password-confirm": "確認用パスワード",
+      "last-name": "姓", "first-name": "名", "kana-last-name": "セイ", "kana-first-name": "メイ",
+      "pickup-address": "乗車場所", "destination-address": "目的地", date: "乗車日",
+      "time-hour": "乗車時刻（時）", "time-minute": "乗車時刻（分）", passengers: "乗車人数", notes: "備考"
+    };
+    const label = labels[input.id] || "この項目";
+    let message = "入力内容を確認してください。";
+    if (validity.valueMissing) message = `${label}を入力または選択してください。`;
+    else if (validity.typeMismatch && input.type === "email") message = "メールアドレスを正しい形式で入力してください（例：name@example.com）。";
+    else if (validity.tooShort) message = `${label}は${input.minLength}文字以上で入力してください。`;
+    else if (validity.tooLong) message = `${label}は${input.maxLength}文字以内で入力してください。`;
+    else if (validity.patternMismatch) message = input.id.startsWith("kana-") ? "全角カタカナで入力してください。" : "指定された形式で入力してください。";
+    else if (validity.rangeUnderflow) message = `${label}は${input.min}以降または以上の値を指定してください。`;
+    else if (validity.rangeOverflow) message = `${label}は${input.max}以前または以下の値を指定してください。`;
+    else if (validity.badInput || validity.stepMismatch) message = `${label}を正しい値で入力してください。`;
+    else if (validity.customError && /[ぁ-んァ-ヶ一-龠]/.test(input.validationMessage)) return input.validationMessage;
+    input.setCustomValidity(message);
+    localizedInputs.add(input);
+    return message;
+  }
+
+  function clearInputError(input) {
+    if (!localizedInputs.has(input)) return;
+    input.setCustomValidity("");
+    localizedInputs.delete(input);
+  }
+
   return {
+    inputErrorMessage,
+    clearInputError,
     ApiError,
     apiFetch,
     login,

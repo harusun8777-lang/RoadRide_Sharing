@@ -72,7 +72,7 @@ test('registration API field error appears beside matching input', async () => {
 test('browser input validation also appears in persistent form error', () => {
   const s=setup();s.storage.clear();
   vm.runInContext(read('login/assets/js/login.js'),s.context);
-  s.node('login-form').listeners.invalid({target:{validationMessage:'メールアドレスを入力してください。'}});
+  s.node('login-form').listeners.invalid({target:{id:'email', validity:{valueMissing:true}, validationMessage:'Please fill out this field.', setCustomValidity() {}}});
   assert.match(s.node('login-error').textContent,/メールアドレス/);
 });
 test('session expiry message survives navigation to login', () => {
@@ -108,4 +108,23 @@ test('failed reservation does not navigate to success page', async () => {
   assert.equal(s.node('#page-error').hidden,false);
   assert.equal(s.node('#confirm-button').disabled,false);
   assert.equal(s.context.window.location.href,'');
+});
+for (const [id, type, validity, expected] of [
+  ['email', 'email', {valueMissing:true}, /メールアドレス.*入力/],
+  ['email', 'email', {typeMismatch:true}, /正しい形式/],
+  ['password', 'password', {tooShort:true}, /8文字以上/],
+  ['kana-last-name', 'text', {patternMismatch:true}, /全角カタカナ/],
+  ['passengers', 'number', {badInput:true}, /乗車人数.*正しい値/]
+]) test(`Japanese validation independent of browser language: ${id} ${Object.keys(validity)[0]}`, () => {
+  const s = setup();
+  const input = {id, type, validity, minLength:8, validationMessage:'Please enter a valid value.', setCustomValidity(value) {this.customMessage=value;}};
+  assert.match(s.auth.inputErrorMessage(input),expected);
+  assert.doesNotMatch(input.customMessage,/Please/);
+  s.auth.clearInputError(input);
+  assert.equal(input.customMessage,'');
+});
+test('existing Japanese password mismatch stays intact', () => {
+  const s = setup();
+  const input = {id:'password-confirm',validity:{customError:true},validationMessage:'パスワードが一致しません。'};
+  assert.equal(s.auth.inputErrorMessage(input),'パスワードが一致しません。');
 });

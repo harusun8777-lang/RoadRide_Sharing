@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">RoadRide Sharing</string>
+    <string name="app_name">Hitch Tac</string>
     <string name="app_tagline">地域AI乗り合い交通</string>
     <string name="select_mode">使い方を選んでください</string>
     <string name="btn_rider">利用者として使う</string>

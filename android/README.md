@@ -1,4 +1,4 @@
-# RoadRide Sharing Android アプリ
+# Hitch Tac Android アプリ
 
 ## 概要
 

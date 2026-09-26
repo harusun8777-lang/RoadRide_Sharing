@@ -20,7 +20,7 @@
       : "/reservation/pages/reservation.html";
 
   document.body.dataset.role                        = role;
-  document.title                                    = `${roleName}新規登録 | RoadRide Sharing`;
+  document.title                                    = `${roleName}新規登録 | Hitch Tac`;
   document.getElementById("role-label").textContent  = `${roleName}向け`;
   document.getElementById("page-title").textContent  = `${roleName}新規登録`;
   document.getElementById("login-link").href         = `index.html?${loginParams}`;
@@ -88,9 +88,12 @@
     form.setAttribute("aria-busy", String(loading));
   }
 
+  form.addEventListener("input", event => RoadRideAuth.clearInputError(event.target), true);
+  form.addEventListener("change", event => RoadRideAuth.clearInputError(event.target), true);
+
   form.addEventListener("invalid", (event) => {
     const field = Object.values(FIELDS).find(item => item.inputEl === event.target);
-    const message = event.target.validationMessage || "入力内容を確認してください。";
+    const message = RoadRideAuth.inputErrorMessage(event.target);
     if (field) setFieldError(field, message);
     formError.textContent = "入力内容を確認してください。";
   }, true);

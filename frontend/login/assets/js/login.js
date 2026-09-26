@@ -19,7 +19,7 @@
   document.getElementById("register-link").href    = `register.html?${registrationParams}`;
   if (isDispatcher) document.getElementById("register-link").parentElement.remove();
   document.body.dataset.role                       = isDispatcher ? "dispatcher" : "user";
-  document.title                                   = `${roleName}ログイン | RoadRide Sharing`;
+  document.title                                   = `${roleName}ログイン | Hitch Tac`;
   document.getElementById("role-label").textContent = `${roleName}向け`;
   document.getElementById("page-title").textContent = `${roleName}ログイン`;
   document.getElementById("login-description").textContent =
@@ -41,8 +41,11 @@
     showError("ログインの有効期限が切れました。もう一度ログインしてください。");
   }
 
+  form.addEventListener("input", event => RoadRideAuth.clearInputError(event.target), true);
+  form.addEventListener("change", event => RoadRideAuth.clearInputError(event.target), true);
+
   form.addEventListener("invalid", (event) => {
-    showError(event.target.validationMessage || "入力内容を確認してください。");
+    showError(RoadRideAuth.inputErrorMessage(event.target));
   }, true);
 
   function setLoading(loading) {

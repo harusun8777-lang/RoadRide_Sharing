@@ -4,6 +4,9 @@
 
   const Api = RoadRideReservationApi;
   const form = document.querySelector("#reservation-form");
+  form.addEventListener("invalid", event => RoadRideAuth.inputErrorMessage(event.target), true);
+  form.addEventListener("input", event => RoadRideAuth.clearInputError(event.target), true);
+  form.addEventListener("change", event => RoadRideAuth.clearInputError(event.target), true);
   const pickupInput = document.querySelector("#pickup-address");
   const destinationInput = document.querySelector("#destination-address");
   const hourSelect = document.querySelector("#time-hour");
