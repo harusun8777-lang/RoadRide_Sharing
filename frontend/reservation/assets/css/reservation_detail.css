@@ -284,6 +284,13 @@
   margin-top: 10px;
 }
 
+/* キャンセルできない状態の案内 */
+.action-card .alert {
+  margin: 0;
+  color: var(--info);
+  font-size: 14px;
+}
+
 .cancel-link {
   min-height: 48px;
   padding: 0 16px;

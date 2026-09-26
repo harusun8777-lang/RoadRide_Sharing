@@ -57,6 +57,12 @@
   word-break: break-word;
 }
 
+.cancelled-at {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .button-area {
   display: flex;
   flex-wrap: wrap;

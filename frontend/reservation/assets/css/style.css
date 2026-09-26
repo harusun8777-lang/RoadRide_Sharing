@@ -366,3 +366,50 @@ button:hover,
     font-size: 10px;
   }
 }
+
+/* =========================================
+   API の読み込み中・エラーの表示
+   ========================================= */
+
+/* display を指定したクラスがあっても hidden 属性で隠れるようにする */
+[hidden] {
+  display: none !important;
+}
+
+.alert {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  color: var(--danger);
+  background: #fef2f2;
+  font-weight: 700;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.alert-notice {
+  border-color: #bae6fd;
+  color: var(--info);
+  background: #f0f9ff;
+}
+
+.loading-message {
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.field-error {
+  margin: 6px 0 0;
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+button:disabled,
+button:disabled:hover {
+  cursor: not-allowed;
+  opacity: .55;
+  filter: none;
+}
