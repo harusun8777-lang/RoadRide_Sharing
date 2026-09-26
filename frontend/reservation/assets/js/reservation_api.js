@@ -62,16 +62,29 @@ const RoadRideReservationApi = (() => {
   }
 
   async function fetchJson(path, options = {}) {
+    // RoadRideAuth が読み込まれていればトークンを付与する
+    const token = (typeof RoadRideAuth !== "undefined") ? RoadRideAuth.getToken() : null;
+
     const response = await fetch(`${apiBase}${path}`, {
       ...options,
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers
       }
     });
 
     const payload = await response.json().catch(() => ({}));
+
+    // 401 の場合はトークンを削除してログイン画面へ戻す
+    if (response.status === 401) {
+      if (typeof RoadRideAuth !== "undefined") {
+        RoadRideAuth.clearToken();
+        window.location.assign("/frontend/login/index.html?role=user");
+      }
+      return null;
+    }
 
     if (!response.ok) {
       const message =
