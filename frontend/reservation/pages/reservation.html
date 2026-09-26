@@ -13,7 +13,8 @@
   <link rel="stylesheet" href="../assets/css/account.css">
   <script src="../assets/js/account.js" defer></script>
   <script src="../assets/js/map.js" defer></script>
-  <script async
+  <!-- map.js（defer）の後に実行されるよう defer にする。async だと initMaps の定義前にコールバックが呼ばれることがある -->
+  <script defer
   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAdZTxOsa9cRkjSvOkhPLDJLVHvxKU0lcA&callback=initMaps">
 </script>
 </head>
@@ -77,8 +78,8 @@
               </p>
 
               <label for="pickup-address">乗車場所の住所 <span class="required">必須</span></label>
-              <input id="pickup-address" name="pickup-address" aria-describedby="pickup-address-hint" type="text"
-                placeholder="住所" required>
+              <input id="pickup-address" name="pickup-address" maxlength="200" aria-describedby="pickup-address-hint"
+                type="text" placeholder="住所" required>
 
               <div class="field full" style="margin-top: 16px;">
                 <label>地図から乗車場所を選択</label>
@@ -101,7 +102,8 @@
               </p>
 
               <label for="destination-address">目的地の住所 <span class="required">必須</span></label>
-              <input id="destination-address" name="destination-address" type="text" placeholder="住所" required>
+              <input id="destination-address" name="destination-address" maxlength="200"
+                aria-describedby="destination-address-hint" type="text" placeholder="住所" required>
 
               <!-- ★ destination-map（目的地） -->
               <div class="field full" style="margin-top: 16px;">
