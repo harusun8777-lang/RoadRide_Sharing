@@ -39,7 +39,25 @@
 - Docker / Docker Compose
 - ローカルで直接動かす場合は .NET 10 SDK
 
-### Docker Compose で起動する（推奨）
+### start-local.bat で起動する（Windows）
+
+SQL Server・バックエンド・Swagger UI をまとめて起動し、起動したらブラウザで Swagger UI を開きます。
+
+```bat
+start-local.bat         :: 起動
+start-local.bat stop    :: 停止（DB のデータは残る）
+```
+
+| URL | 内容 |
+| --- | --- |
+| http://localhost:8080 | API |
+| http://localhost:8081 | Swagger UI（`docs/SWAGGER.yaml` を表示。「Try it out」で API を呼べる） |
+
+- `.env` がなければ `.env.example` からコピーします。`JWT_SIGNING_KEY` は 32 文字以上の値に変更してください
+- Swagger UI から API を呼べるよう、Development 環境のときだけ `http://localhost:8081` からの CORS を許可しています
+- ログインで受け取った `access_token` を、Swagger UI 右上の「Authorize」に入れると認証が必要な API も試せます
+
+### Docker Compose で起動する
 
 ```sh
 cp .env.example .env        # 必要に応じて MSSQL_SA_PASSWORD を変更
