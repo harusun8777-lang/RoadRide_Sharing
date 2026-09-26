@@ -16,7 +16,17 @@ buildConfigField "String", "RIDER_URL",      "\"https://your-domain.example.com/
 buildConfigField "String", "DISPATCHER_URL", "\"https://your-domain.example.com/frontend/dispatch/pages/dashboard.html\""
 ```
 
-### 2. Android Studio で開く
+### 2. gradle-wrapper.jar を取得する
+
+`gradle/wrapper/gradle-wrapper.jar` はバイナリファイルのためリポジトリに含まれていません。  
+Android Studio で開くと自動的に生成されます。  
+または以下のコマンドで取得できます。
+
+```bash
+gradle wrapper --gradle-version 8.2
+```
+
+### 3. Android Studio で開く
 
 1. Android Studio を起動
 2. `android/` フォルダを「Open an Existing Project」で開く
